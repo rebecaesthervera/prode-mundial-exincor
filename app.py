@@ -11,30 +11,33 @@ st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wi
 # --- FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS ---
 def conectar_sheet():
     try:
-        # 1. Cargamos el secreto
-        creds_json = st.secrets["gcp_service_account"]["json_key"]
-        info = json.loads(creds_json, strict=False)
+        # 1. Cargamos el secreto (asegúrate de que en Streamlit Secrets se llame json_key)
+        json_key = st.secrets["gcp_service_account"]["json_key"]
+        info = json.loads(json_key, strict=False)
         
-        # 2. Configuramos los permisos
-        scope = [
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive"
-        ]
-        
+        # 2. Configuración de permisos
+        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         creds = Credentials.from_service_account_info(info, scopes=scope)
         client = gspread.authorize(creds)
         
-        # 3. Abrimos la planilla
-        # IMPORTANTE: Asegúrate de que el nombre sea "Prode Mundial Exincor" 
-        # (o el que le hayas puesto al archivo de Google Sheets)
-        nombre_planilla = "Prode Mundial Exincor"
-        sheet = client.open(nombre_planilla).sheet1
-        return sheet
+        # 3. CONEXIÓN POR ID (Blindada)
+        ID_PLANILLA = "1lrC5SJmWmpN5KIVRAlYbQk7AXVsb7NK0bZwMKQ4rU_E"
+        
+        # Abrimos la planilla directamente por su identidad única
+        spreadsheet = client.open_by_key(ID_PLANILLA)
+        return spreadsheet.get_worksheet(0) # Accede a la primera pestaña
+        
     except Exception as e:
-        # Solo mostramos el error si realmente no puede conectar
-        st.error(f"No se pudo conectar con la base de datos: {e}")
+        # Si el error es el famoso "200", intentamos una captura silenciosa
+        if "200" in str(e):
+            try:
+                client = gspread.authorize(creds)
+                return client.open_by_key("1lrC5SJmWmpN5KIVRAlYbQk7AXVsb7NK0bZwMKQ4rU_E").get_worksheet(0)
+            except:
+                st.error("Error crítico de comunicación con Google. Revisa los Secrets.")
+        else:
+            st.error(f"No se pudo conectar: {e}")
         return None
-
 # 2. DATOS DEL MUNDIAL
 grupos = {
     "Grupo A": ["México", "Sudáfrica", "Corea del Sur", "Rep. Checa"],
