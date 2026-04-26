@@ -11,19 +11,26 @@ st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wi
 # --- FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS ---
 def conectar_sheet():
     try:
-        # Leemos el secreto que pegaste en Streamlit Cloud
-        json_key = st.secrets["gcp_service_account"]["json_key"]
-        info = json.loads(json_key)
+        # 1. Obtenemos el texto del secreto
+        json_key_raw = st.secrets["gcp_service_account"]["json_key"]
         
+        # 2. LIMPIEZA DE CARACTERES: Esto borra saltos de línea extraños o caracteres de control
+        # que causan el error "char 173"
+        json_key_clean = json_key_raw.strip()
+        
+        # 3. Cargamos el JSON
+        info = json.loads(json_key_clean, strict=False)
+        
+        # 4. Conexión estándar
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         creds = Credentials.from_service_account_info(info, scopes=scope)
         client = gspread.authorize(creds)
         
-        # IMPORTANTE: Cambiá "Resultados de Prode Mundial Exincor" por el nombre real de tu Google Sheet
+        # Asegúrate de que el nombre sea exacto al de tu archivo
         sheet = client.open("Prode Mundial Exincor").sheet1 
         return sheet
     except Exception as e:
-        st.error(f"Error de conexión con Google Sheets: {e}")
+        st.error(f"Error técnico de conexión: {e}")
         return None
 
 # 2. DATOS DEL MUNDIAL
