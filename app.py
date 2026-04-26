@@ -141,3 +141,54 @@ if enviado:
                     st.success(f"✅ ¡Excelente {nombre}! Tus pronósticos se guardaron correctamente. ¡Mucha suerte!")
                 except Exception as e:
                     st.error(f"Error al escribir en el Sheet: {e}")
+                    
+# --- PESTAÑA DE RANKING Y RESULTADOS ---
+st.markdown("---")
+st.subheader("📊 Tabla de Posiciones - Exincor")
+
+try:
+    # 1. Leemos todos los datos del Sheet
+    datos_completos = hoja.get_all_records()
+    df_prode = pd.DataFrame(datos_completos)
+
+    if not df_prode.empty:
+        # 2. La Fila Maestra (Supongamos que es la primera respuesta o una fila fija)
+        # Para probar, vamos a crear un "Resultado Real" imaginario
+        resultados_reales = df_prode.iloc[0] # Usamos la primera fila como referencia de prueba
+        
+        ranking = []
+
+        for i, fila in df_prode.iterrows():
+            # No contamos la fila maestra como jugador
+            if i == 0: continue 
+            
+            puntos = 0
+            # Comparamos desde la columna 4 en adelante (donde empiezan los partidos)
+            for col in df_prode.columns[3:]:
+                if fila[col] == resultados_reales[col] and fila[col] != "":
+                    puntos += 3
+            
+            ranking.append({
+                "Colaborador": fila["Apellido y Nombre"],
+                "Legajo": fila["Legajo"],
+                "Puntos": puntos
+            })
+
+        # 3. Mostrar la Tabla de Posiciones
+        df_ranking = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
+        
+        # Le damos un toque visual con colores
+        st.dataframe(
+            df_ranking.style.highlight_max(axis=0, color='#D1FAE5'),
+            use_container_width=True,
+            hide_index=True
+        )
+        
+        # 4. Métrica del Líder
+        if not df_ranking.empty:
+            lider = df_ranking.iloc[0]["Colaborador"]
+            puntaje_lider = df_ranking.iloc[0]["Puntos"]
+            st.metric(label="🏆 Puntero Actual", value=lider, delta=f"{puntaje_lider} pts")
+
+except Exception as e:
+    st.info("La tabla de posiciones se activará cuando empiecen a cargar los resultados reales.")
