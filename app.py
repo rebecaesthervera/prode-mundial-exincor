@@ -192,3 +192,53 @@ try:
 
 except Exception as e:
     st.info("La tabla de posiciones se activará cuando empiecen a cargar los resultados reales.")
+
+# --- PESTAÑA DE TENDENCIAS ---
+with st.expander("📈 Ver Tendencias y Estadísticas de la Oficina"):
+    if not df_prode.empty:
+        st.markdown("### ¿Qué dice la mayoría en Exincor?")
+        
+        # 1. Procesamos los datos para ver favoritos
+        # Contamos cuántas veces aparece cada equipo como ganador en los votos de la gente
+        todos_los_votos = df_prode.iloc[1:].melt(id_vars=['Apellido y Nombre'], value_vars=df_prode.columns[3:])
+        votos_ganadores = todos_los_votos[~todos_los_votos['value'].str.contains("Empate")]
+        
+        # Limpiamos el texto para quedarnos solo con el nombre del equipo
+        votos_ganadores['Equipo'] = votos_ganadores['value'].str.split(" Gana ").str[-1]
+        top_favoritos = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
+        
+        col_graf1, col_graf2 = st.columns(2)
+        
+        with col_graf1:
+            st.write("**Top 10 Equipos Favoritos (Más votados como ganadores)**")
+            fig_fav = px.bar(top_favoritos, x='count', y='Equipo', orientation='h', 
+                             color_discrete_sequence=['#1E3A8A'], labels={'count':'Votos', 'index':'Equipo'})
+            fig_fav.update_layout(height=400, margin=dict(t=0, b=0, l=0, r=0))
+            st.plotly_chart(fig_fav, use_container_width=True)
+
+        with col_graf2:
+            st.write("**Distribución de Resultados**")
+            # Vemos si la gente es más de arriesgar a un ganador o si votan muchos empates
+            tipo_voto = []
+            for v in todos_los_votos['value']:
+                if "Empate" in v: tipo_voto.append("Empate")
+                else: tipo_voto.append("Ganador (L o V)")
+            
+            df_tipo = pd.DataFrame(tipo_voto, columns=["Tipo"])
+            fig_pie = px.pie(df_tipo, names='Tipo', hole=0.5, color_discrete_sequence=['#3B82F6', '#94A3B8'])
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        st.markdown("---")
+        st.write("**🔍 Analizador de Partidos**")
+        partido_seleccionar = st.selectbox("Elegí un partido para ver la tendencia de voto:", df_prode.columns[3:])
+        
+        tendencia_partido = df_prode.iloc[1:][partido_seleccionar].value_counts(normalize=True) * 100
+        df_tendencia = tendencia_partido.reset_index()
+        df_tendencia.columns = ['Opción', 'Porcentaje']
+        
+        fig_tend = px.bar(df_tendencia, x='Opción', y='Porcentaje', text=df_tendencia['Porcentaje'].apply(lambda x: f'{x:.1f}%'),
+                          color='Opción', color_discrete_sequence=['#1E3A8A', '#64748B', '#3B82F6'])
+        st.plotly_chart(fig_tend, use_container_width=True)
+
+    else:
+        st.info("Cuando más gente complete el Prode, acá verás los gráficos de tendencia.")
