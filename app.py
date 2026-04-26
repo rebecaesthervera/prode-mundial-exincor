@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# 1. CONFIGURACIÓN DE PÁGINA (Layout 'wide' para tener más espacio, pero centraremos el contenido)
+# 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
 
 # 2. DICCIONARIOS DE DATOS
@@ -20,20 +20,20 @@ grupos = {
     "Grupo L": ["Inglaterra", "Croacia", "Ghana", "Panamá"]
 }
 
-# Diccionario de banderas para darle color a la app
-banderas = {
-    "México": "🇲🇽", "Sudáfrica": "🇿🇦", "Corea del Sur": "🇰🇷", "Rep. Checa": "🇨🇿",
-    "Canadá": "🇨🇦", "Bosnia": "🇧🇦", "Qatar": "🇶🇦", "Suiza": "🇨🇭",
-    "Brasil": "🇧🇷", "Marruecos": "🇲🇦", "Haití": "🇭🇹", "Escocia": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-    "EE. UU.": "🇺🇸", "Turquía": "🇹🇷", "Australia": "🇦🇺", "Paraguay": "🇵🇾",
-    "Alemania": "🇩🇪", "Curazao": "🇨🇼", "C. Marfil": "🇨🇮", "Ecuador": "🇪🇨",
-    "P. Bajos": "🇳🇱", "Japón": "🇯🇵", "Suecia": "🇸🇪", "Túnez": "🇹🇳",
-    "Bélgica": "🇧🇪", "Egipto": "🇪🇬", "Irán": "🇮🇷", "N. Zelanda": "🇳🇿",
-    "España": "🇪🇸", "C. Verde": "🇨🇻", "Arabia S.": "🇸🇦", "Uruguay": "🇺🇾",
-    "Francia": "🇫🇷", "Senegal": "🇸🇳", "Irak": "🇮🇶", "Noruega": "🇳🇴",
-    "Austria": "🇦🇹", "Jordania": "🇯🇴", "Argentina": "🇦🇷", "Argelia": "🇩🇿",
-    "Portugal": "🇵🇹", "RD Congo": "🇨🇩", "Uzbekistán": "🇺🇿", "Colombia": "🇨🇴",
-    "Inglaterra": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Croacia": "🇭🇷", "Ghana": "🇬🇭", "Panamá": "🇵🇦"
+# SOLUCIÓN WINDOWS: Usamos siglas FIFA oficiales en lugar de emojis
+siglas = {
+    "México": "MEX", "Sudáfrica": "RSA", "Corea del Sur": "KOR", "Rep. Checa": "CZE",
+    "Canadá": "CAN", "Bosnia": "BIH", "Qatar": "QAT", "Suiza": "SUI",
+    "Brasil": "BRA", "Marruecos": "MAR", "Haití": "HAI", "Escocia": "SCO",
+    "EE. UU.": "USA", "Turquía": "TUR", "Australia": "AUS", "Paraguay": "PAR",
+    "Alemania": "GER", "Curazao": "CUW", "C. Marfil": "CIV", "Ecuador": "ECU",
+    "P. Bajos": "NED", "Japón": "JPN", "Suecia": "SWE", "Túnez": "TUN",
+    "Bélgica": "BEL", "Egipto": "EGY", "Irán": "IRN", "N. Zelanda": "NZL",
+    "España": "ESP", "C. Verde": "CPV", "Arabia S.": "KSA", "Uruguay": "URU",
+    "Francia": "FRA", "Senegal": "SEN", "Irak": "IRQ", "Noruega": "NOR",
+    "Austria": "AUT", "Jordania": "JOR", "Argentina": "ARG", "Argelia": "ALG",
+    "Portugal": "POR", "RD Congo": "COD", "Uzbekistán": "UZB", "Colombia": "COL",
+    "Inglaterra": "ENG", "Croacia": "CRO", "Ghana": "GHA", "Panamá": "PAN"
 }
 
 def generar_partidos(equipos):
@@ -48,7 +48,6 @@ st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>🏆 Prode Mundial 
 st.markdown("<p style='text-align: center; font-size: 18px;'>Completa tus pronósticos para la fase de grupos. ¡Demuestra quién sabe más de fútbol en la oficina!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Usamos columnas para que el formulario no ocupe el 100% del monitor ancho, dejándolo centrado y legible.
 espacio_izq, col_central, espacio_der = st.columns([1, 2, 1])
 
 with col_central:
@@ -75,16 +74,16 @@ with col_central:
                 for j, partido in enumerate(partidos):
                     local = partido[0]
                     visita = partido[1]
-                    bandera_L = banderas.get(local, "🏳️")
-                    bandera_V = banderas.get(visita, "🏳️")
                     
-                    # AQUÍ ESTÁ LA MAGIA: El diseño de "Tarjeta"
+                    sigla_L = siglas.get(local, "---")
+                    sigla_V = siglas.get(visita, "---")
+                    
                     with st.container(border=True):
                         st.markdown(f"<p style='text-align:center; color:#64748B; margin-bottom:5px; font-size:14px;'>Partido {j+1}</p>", unsafe_allow_html=True)
                         
                         clave_partido = f"{nombre_grupo}_Match_{j}"
-                        # Las banderas van directo adentro de las opciones
-                        opciones_voto = [f"{bandera_L} Gana {local}", "🤝 Empate", f"{bandera_V} Gana {visita}"]
+                        # Opciones con estilo televisivo [ARG] Gana Argentina
+                        opciones_voto = [f"[{sigla_L}] Gana {local}", "🤝 Empate", f"[{sigla_V}] Gana {visita}"]
                         
                         respuestas[clave_partido] = st.radio(
                             "Selecciona un resultado:",
@@ -105,7 +104,6 @@ if enviado:
     else:
         st.success(f"🎉 ¡Excelente {nombre}! Tus pronósticos están listos.")
         
-        # Muestra de prueba: qué votó en el Grupo J
         st.write(f"**Tus predicciones para el Grupo de Argentina:**")
         for key, value in respuestas.items():
             if "Grupo J" in key:
