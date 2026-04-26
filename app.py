@@ -11,26 +11,28 @@ st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wi
 # --- FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS ---
 def conectar_sheet():
     try:
-        # 1. Obtenemos el texto del secreto
-        json_key_raw = st.secrets["gcp_service_account"]["json_key"]
+        # 1. Cargamos el secreto
+        creds_json = st.secrets["gcp_service_account"]["json_key"]
+        info = json.loads(creds_json, strict=False)
         
-        # 2. LIMPIEZA DE CARACTERES: Esto borra saltos de línea extraños o caracteres de control
-        # que causan el error "char 173"
-        json_key_clean = json_key_raw.strip()
+        # 2. Configuramos los permisos
+        scope = [
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ]
         
-        # 3. Cargamos el JSON
-        info = json.loads(json_key_clean, strict=False)
-        
-        # 4. Conexión estándar
-        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         creds = Credentials.from_service_account_info(info, scopes=scope)
         client = gspread.authorize(creds)
         
-        # Asegúrate de que el nombre sea exacto al de tu archivo
-        sheet = client.open("Prode Mundial Exincor").sheet1 
+        # 3. Abrimos la planilla
+        # IMPORTANTE: Asegúrate de que el nombre sea "Prode Mundial Exincor" 
+        # (o el que le hayas puesto al archivo de Google Sheets)
+        nombre_planilla = "Prode Mundial Exincor"
+        sheet = client.open(nombre_planilla).sheet1
         return sheet
     except Exception as e:
-        st.error(f"Error técnico de conexión: {e}")
+        # Solo mostramos el error si realmente no puede conectar
+        st.error(f"No se pudo conectar con la base de datos: {e}")
         return None
 
 # 2. DATOS DEL MUNDIAL
