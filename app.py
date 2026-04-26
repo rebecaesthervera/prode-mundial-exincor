@@ -143,15 +143,27 @@ with tab_ranking:
             for _, fila in df_jugadores.iterrows():
                 puntos = 0
                 for col in df_prode.columns[3:]:
-                    if fila[col] == resultados_reales[col] and fila[col] != "":
+                    # Verificamos que tanto el resultado oficial como el del usuario existan
+                    if col in resultados_reales and fila[col] == resultados_reales[col] and fila[col] != "":
                         puntos += 3
-                ranking.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
+                
+                ranking.append({
+                    "Colaborador": fila["Apellido y Nombre"], 
+                    "Legajo": fila["Legajo"], 
+                    "Puntos": puntos
+                })
             
-            df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
-            st.dataframe(df_rank, use_container_width=True, hide_index=True)
-            
-            if not df_rank.empty:
-                st.metric("🏆 Líder Actual", df_rank.iloc[0]["Colaborador"], f"{df_rank.iloc[0]['Puntos']} pts")
+            # --- CORRECCIÓN DEL ERROR ---
+            if ranking: # Solo intentamos crear y ordenar si hay gente en la lista
+                df_rank = pd.DataFrame(ranking)
+                if "Puntos" in df_rank.columns:
+                    df_rank = df_rank.sort_values(by="Puntos", ascending=False)
+                    st.dataframe(df_rank, use_container_width=True, hide_index=True)
+                    
+                    st.divider()
+                    st.metric("🏆 Líder Actual", df_rank.iloc[0]["Colaborador"], f"{df_rank.iloc[0]['Puntos']} pts")
+            else:
+                st.info("Aún no hay participantes registrados para calcular el ranking.")
         else:
             st.info("💡 El ranking se activará cuando cargues la fila 'RESULTADOS OFICIALES' en el Sheet.")
     else:
