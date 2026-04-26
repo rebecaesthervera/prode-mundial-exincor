@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-# 1. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="centered")
+# 1. CONFIGURACIÓN DE PÁGINA (Layout 'wide' para tener más espacio, pero centraremos el contenido)
+st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
 
-# 2. BASE DE DATOS DEL FIXTURE (Extraída del PDF)
+# 2. DICCIONARIOS DE DATOS
 grupos = {
     "Grupo A": ["México", "Sudáfrica", "Corea del Sur", "Rep. Checa"],
     "Grupo B": ["Canadá", "Bosnia", "Qatar", "Suiza"],
@@ -20,7 +20,22 @@ grupos = {
     "Grupo L": ["Inglaterra", "Croacia", "Ghana", "Panamá"]
 }
 
-# Función para generar los 6 partidos de un grupo (Todos contra Todos)
+# Diccionario de banderas para darle color a la app
+banderas = {
+    "México": "🇲🇽", "Sudáfrica": "🇿🇦", "Corea del Sur": "🇰🇷", "Rep. Checa": "🇨🇿",
+    "Canadá": "🇨🇦", "Bosnia": "🇧🇦", "Qatar": "🇶🇦", "Suiza": "🇨🇭",
+    "Brasil": "🇧🇷", "Marruecos": "🇲🇦", "Haití": "🇭🇹", "Escocia": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+    "EE. UU.": "🇺🇸", "Turquía": "🇹🇷", "Australia": "🇦🇺", "Paraguay": "🇵🇾",
+    "Alemania": "🇩🇪", "Curazao": "🇨🇼", "C. Marfil": "🇨🇮", "Ecuador": "🇪🇨",
+    "P. Bajos": "🇳🇱", "Japón": "🇯🇵", "Suecia": "🇸🇪", "Túnez": "🇹🇳",
+    "Bélgica": "🇧🇪", "Egipto": "🇪🇬", "Irán": "🇮🇷", "N. Zelanda": "🇳🇿",
+    "España": "🇪🇸", "C. Verde": "🇨🇻", "Arabia S.": "🇸🇦", "Uruguay": "🇺🇾",
+    "Francia": "🇫🇷", "Senegal": "🇸🇳", "Irak": "🇮🇶", "Noruega": "🇳🇴",
+    "Austria": "🇦🇹", "Jordania": "🇯🇴", "Argentina": "🇦🇷", "Argelia": "🇩🇿",
+    "Portugal": "🇵🇹", "RD Congo": "🇨🇩", "Uzbekistán": "🇺🇿", "Colombia": "🇨🇴",
+    "Inglaterra": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Croacia": "🇭🇷", "Ghana": "🇬🇭", "Panamá": "🇵🇦"
+}
+
 def generar_partidos(equipos):
     return [
         (equipos[0], equipos[1]), (equipos[2], equipos[3]),
@@ -30,70 +45,68 @@ def generar_partidos(equipos):
 
 # 3. INTERFAZ VISUAL
 st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>🏆 Prode Mundial 2026 - Exincor</h1>", unsafe_allow_html=True)
-st.write("Completa tus pronósticos para la fase de grupos. ¡Demuestra quién sabe más de fútbol en la oficina!")
+st.markdown("<p style='text-align: center; font-size: 18px;'>Completa tus pronósticos para la fase de grupos. ¡Demuestra quién sabe más de fútbol en la oficina!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Iniciamos el Formulario
-with st.form("formulario_prode"):
-    st.subheader("👤 Tus Datos")
-    col1, col2 = st.columns(2)
-    with col1:
-        nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan")
-    with col2:
-        legajo = st.text_input("Legajo", placeholder="Tu número de legajo")
-        
-    st.markdown("---")
-    st.subheader("⚽ Pronósticos de Fase de Grupos")
-    
-    # Creamos las pestañas dinámicamente según el diccionario de grupos
-    nombres_grupos = list(grupos.keys())
-    tabs = st.tabs(nombres_grupos)
-    
-    # Diccionario para guardar las respuestas temporalmente antes de enviar
-    respuestas = {}
-    
-    for i, (nombre_grupo, equipos) in enumerate(grupos.items()):
-        with tabs[i]:
-            st.markdown(f"### {nombre_grupo}")
-            partidos = generar_partidos(equipos)
+# Usamos columnas para que el formulario no ocupe el 100% del monitor ancho, dejándolo centrado y legible.
+espacio_izq, col_central, espacio_der = st.columns([1, 2, 1])
+
+with col_central:
+    with st.form("formulario_prode"):
+        st.subheader("👤 Tus Datos")
+        col1, col2 = st.columns(2)
+        with col1:
+            nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan")
+        with col2:
+            legajo = st.text_input("Legajo", placeholder="Tu número de legajo")
             
-            for j, partido in enumerate(partidos):
-                # Usamos columnas para darle formato de "Marcador"
-                c_loc, c_res, c_vis = st.columns([2, 3, 2])
+        st.markdown("---")
+        st.subheader("⚽ Pronósticos de Fase de Grupos")
+        
+        nombres_grupos = list(grupos.keys())
+        tabs = st.tabs(nombres_grupos)
+        respuestas = {}
+        
+        for i, (nombre_grupo, equipos) in enumerate(grupos.items()):
+            with tabs[i]:
+                st.markdown(f"<h3 style='color:#1E3A8A;'>{nombre_grupo}</h3>", unsafe_allow_html=True)
+                partidos = generar_partidos(equipos)
                 
-                with c_loc:
-                    st.markdown(f"<p style='text-align:right; font-weight:bold; margin-top:10px;'>{partido[0]}</p>", unsafe_allow_html=True)
-                
-                with c_res:
-                    # Guardamos la elección con un key único por partido
-                    clave_partido = f"{nombre_grupo}_Match_{j}"
-                    respuestas[clave_partido] = st.radio(
-                        "Resultado",
-                        options=[partido[0], "Empate", partido[1]],
-                        horizontal=True,
-                        label_visibility="collapsed",
-                        key=clave_partido
-                    )
+                for j, partido in enumerate(partidos):
+                    local = partido[0]
+                    visita = partido[1]
+                    bandera_L = banderas.get(local, "🏳️")
+                    bandera_V = banderas.get(visita, "🏳️")
                     
-                with c_vis:
-                    st.markdown(f"<p style='text-align:left; font-weight:bold; margin-top:10px;'>{partido[1]}</p>", unsafe_allow_html=True)
-                
-                st.write("") # Pequeño separador visual entre partidos
+                    # AQUÍ ESTÁ LA MAGIA: El diseño de "Tarjeta"
+                    with st.container(border=True):
+                        st.markdown(f"<p style='text-align:center; color:#64748B; margin-bottom:5px; font-size:14px;'>Partido {j+1}</p>", unsafe_allow_html=True)
+                        
+                        clave_partido = f"{nombre_grupo}_Match_{j}"
+                        # Las banderas van directo adentro de las opciones
+                        opciones_voto = [f"{bandera_L} Gana {local}", "🤝 Empate", f"{bandera_V} Gana {visita}"]
+                        
+                        respuestas[clave_partido] = st.radio(
+                            "Selecciona un resultado:",
+                            options=opciones_voto,
+                            horizontal=True,
+                            label_visibility="collapsed",
+                            key=clave_partido
+                        )
 
-    st.markdown("---")
-    # Botón de envío final
-    enviado = st.form_submit_button("🚀 Enviar Mis Pronósticos", use_container_width=True)
+        st.markdown("---")
+        st.info("💡 Revisa todas las pestañas antes de enviar. ¡Mucha suerte!")
+        enviado = st.form_submit_button("🚀 Enviar Mis Pronósticos", use_container_width=True)
 
-# 4. LÓGICA DE ENVÍO (Simulada por ahora)
+# 4. LÓGICA DE ENVÍO
 if enviado:
     if nombre == "" or legajo == "":
         st.error("⚠️ Por favor, completa tu Nombre y Legajo antes de enviar.")
     else:
-        st.success(f"🎉 ¡Excelente {nombre}! Tus pronósticos se han guardado temporalmente en la pantalla.")
-        st.info("Próximo paso: Conectar Google Cloud para que estos datos viajen al Sheet de RRHH.")
+        st.success(f"🎉 ¡Excelente {nombre}! Tus pronósticos están listos.")
         
-        # Opcional: Mostrarle al usuario un resumen de lo que votó en el grupo de Argentina
-        st.write("**Tus votos para el Grupo de Argentina (Grupo J):**")
+        # Muestra de prueba: qué votó en el Grupo J
+        st.write(f"**Tus predicciones para el Grupo de Argentina:**")
         for key, value in respuestas.items():
             if "Grupo J" in key:
                 st.write(f"- {value}")
