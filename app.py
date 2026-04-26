@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import json
 from datetime import datetime
+import plotly.express as px
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
@@ -11,33 +12,26 @@ st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wi
 # --- FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS ---
 def conectar_sheet():
     try:
-        # 1. Cargamos el secreto (asegúrate de que en Streamlit Secrets se llame json_key)
         json_key = st.secrets["gcp_service_account"]["json_key"]
         info = json.loads(json_key, strict=False)
-        
-        # 2. Configuración de permisos
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         creds = Credentials.from_service_account_info(info, scopes=scope)
         client = gspread.authorize(creds)
-        
-        # 3. CONEXIÓN POR ID (Blindada)
         ID_PLANILLA = "1lrC5SJmWmpN5KIVRAlYbQk7AXVsb7NK0bZwMKQ4rU_E"
-        
-        # Abrimos la planilla directamente por su identidad única
         spreadsheet = client.open_by_key(ID_PLANILLA)
-        return spreadsheet.get_worksheet(0) # Accede a la primera pestaña
-        
+        return spreadsheet.get_worksheet(0)
     except Exception as e:
-        # Si el error es el famoso "200", intentamos una captura silenciosa
         if "200" in str(e):
             try:
+                creds = Credentials.from_service_account_info(info, scopes=scope)
                 client = gspread.authorize(creds)
                 return client.open_by_key("1lrC5SJmWmpN5KIVRAlYbQk7AXVsb7NK0bZwMKQ4rU_E").get_worksheet(0)
             except:
-                st.error("Error crítico de comunicación con Google. Revisa los Secrets.")
+                st.error("Error crítico de comunicación con Google.")
         else:
             st.error(f"No se pudo conectar: {e}")
         return None
+
 # 2. DATOS DEL MUNDIAL
 grupos = {
     "Grupo A": ["México", "Sudáfrica", "Corea del Sur", "Rep. Checa"],
@@ -74,171 +68,118 @@ def generar_partidos(equipos):
             (equipos[0], equipos[2]), (equipos[1], equipos[3]),
             (equipos[0], equipos[3]), (equipos[1], equipos[2])]
 
-# 3. INTERFAZ VISUAL
+# 3. CABECERA
 st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>🏆 Prode Mundial 2026 - Exincor</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 18px;'>Completa tus pronósticos y sumá puntos. ¡El ganador se lleva el premio mayor!</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 18px;'>Cargá tus pronósticos y seguí el ranking de la oficina en vivo.</p>", unsafe_allow_html=True)
 
-espacio_izq, col_central, espacio_der = st.columns([1, 3, 1])
+# CREACIÓN DE PESTAÑAS PRINCIPALES
+tab_voto, tab_ranking, tab_stats = st.tabs(["⚽ Cargar Pronósticos", "📊 Tabla de Posiciones", "📈 Tendencias"])
 
-with col_central:
-    with st.form("formulario_prode"):
-        st.subheader("👤 Tus Datos")
-        col1, col2 = st.columns(2)
-        with col1:
-            nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan")
-        with col2:
-            legajo = st.text_input("Legajo", placeholder="Tu número de legajo")
+with tab_voto:
+    espacio_izq, col_central, espacio_der = st.columns([1, 3, 1])
+    with col_central:
+        with st.form("formulario_prode"):
+            st.subheader("👤 Tus Datos")
+            c1, c2 = st.columns(2)
+            with c1: nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan")
+            with c2: legajo = st.text_input("Legajo", placeholder="Tu número de legajo")
             
-        st.markdown("---")
-        st.subheader("⚽ Pronósticos")
-        
-        n_grupos = list(grupos.keys())
-        tabs = st.tabs(n_grupos)
-        respuestas = {} # Diccionario para guardar lo que elije el usuario
-        
-        for i, (n_grupo, equipos) in enumerate(grupos.items()):
-            with tabs[i]:
-                st.markdown(f"<h3 style='color:#1E3A8A;'>{n_grupo}</h3>", unsafe_allow_html=True)
-                partidos = generar_partidos(equipos)
-                
-                for j, partido in enumerate(partidos):
-                    loc, vis = partido[0], partido[1]
-                    s_L, s_V = siglas.get(loc, "---"), siglas.get(vis, "---")
-                    
-                    with st.container(border=True):
-                        st.markdown(f"<p style='text-align:center; color:#64748B; font-size:14px;'>Partido {j+1}</p>", unsafe_allow_html=True)
-                        clave = f"{n_grupo}_Match_{j}"
-                        opciones = [f"[{s_L}] Gana {loc}", "🤝 Empate", f"[{s_V}] Gana {vis}"]
-                        
-                        respuestas[clave] = st.radio("Resultado:", options=opciones, horizontal=True, label_visibility="collapsed", key=clave)
+            st.markdown("---")
+            n_grupos = list(grupos.keys())
+            tabs_grupos = st.tabs(n_grupos)
+            respuestas = {}
+            
+            for i, (n_grupo, equipos) in enumerate(grupos.items()):
+                with tabs_grupos[i]:
+                    st.markdown(f"### {n_grupo}")
+                    partidos = generar_partidos(equipos)
+                    for j, partido in enumerate(partidos):
+                        loc, vis = partido[0], partido[1]
+                        s_L, s_V = siglas.get(loc, "---"), siglas.get(vis, "---")
+                        with st.container(border=True):
+                            st.markdown(f"<p style='text-align:center; color:#64748B; font-size:12px;'>Partido {j+1}</p>", unsafe_allow_html=True)
+                            clave = f"{n_grupo}_Match_{j}"
+                            opciones = [f"[{s_L}] Gana {loc}", "🤝 Empate", f"[{s_V}] Gana {vis}"]
+                            respuestas[clave] = st.radio("Resultado:", options=opciones, horizontal=True, label_visibility="collapsed", key=clave)
 
-        st.markdown("---")
-        st.info("💡 Por favor, revisá todas las pestañas de los grupos antes de enviar.")
-        enviado = st.form_submit_button("🚀 ENVIAR MIS PRONÓSTICOS", use_container_width=True)
+            enviado = st.form_submit_button("🚀 ENVIAR MIS PRONÓSTICOS", use_container_width=True)
 
-# 4. LÓGICA DE ENVÍO A GOOGLE SHEETS
-if enviado:
-    if nombre == "" or legajo == "":
-        st.warning("⚠️ Falta completar Nombre o Legajo.")
-    else:
-        with st.spinner("Guardando tus pronósticos..."):
-            hoja = conectar_sheet()
-            if hoja:
-                # Preparamos la fila para el Excel
-                timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-                # Armamos la lista de valores: Marca Temporal, Nombre, Legajo + todos los votos
-                nueva_fila = [timestamp, nombre, legajo]
-                
-                # Recorremos los grupos en orden para asegurar que los votos vayan a la columna correcta
-                for n_grupo in n_grupos:
-                    for j in range(6):
-                        clave = f"{n_grupo}_Match_{j}"
-                        nueva_fila.append(respuestas[clave])
-                
-                try:
-                    hoja.append_row(nueva_fila)
-                    st.balloons()
-                    st.success(f"✅ ¡Excelente {nombre}! Tus pronósticos se guardaron correctamente. ¡Mucha suerte!")
-                except Exception as e:
-                    st.error(f"Error al escribir en el Sheet: {e}")
-                    
-# --- PESTAÑA DE RANKING Y RESULTADOS ---
-st.markdown("---")
-st.subheader("📊 Tabla de Posiciones - Exincor")
+    if enviado:
+        if nombre == "" or legajo == "":
+            st.warning("⚠️ Completá tu nombre y legajo.")
+        else:
+            with st.spinner("Guardando..."):
+                hoja = conectar_sheet()
+                if hoja:
+                    nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre, legajo]
+                    for n_g in n_grupos:
+                        for j in range(6):
+                            nueva_fila.append(respuestas[f"{n_g}_Match_{j}"])
+                    try:
+                        hoja.append_row(nueva_fila)
+                        st.balloons()
+                        st.success("✅ Guardado correctamente. ¡Mucha suerte!")
+                    except Exception as e:
+                        st.error(f"Error al escribir: {e}")
 
+# DESCARGA DE DATOS PARA RANKING Y ESTADÍSTICAS
 try:
-    # 1. Leemos todos los datos del Sheet
-    datos_completos = hoja.get_all_records()
-    df_prode = pd.DataFrame(datos_completos)
+    hoja = conectar_sheet()
+    datos = hoja.get_all_records()
+    df_prode = pd.DataFrame(datos)
+except:
+    df_prode = pd.DataFrame()
 
+with tab_ranking:
     if not df_prode.empty:
-        # 2. La Fila Maestra (Supongamos que es la primera respuesta o una fila fija)
-        # Para probar, vamos a crear un "Resultado Real" imaginario
-        resultados_reales = df_prode.iloc[0] # Usamos la primera fila como referencia de prueba
+        # Buscamos la fila de RESULTADOS OFICIALES
+        mascara_oficial = df_prode['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
         
-        ranking = []
-
-        for i, fila in df_prode.iterrows():
-            # No contamos la fila maestra como jugador
-            if i == 0: continue 
+        if mascara_oficial.any():
+            resultados_reales = df_prode[mascara_oficial].iloc[0]
+            df_jugadores = df_prode[~mascara_oficial]
             
-            puntos = 0
-            # Comparamos desde la columna 4 en adelante (donde empiezan los partidos)
-            for col in df_prode.columns[3:]:
-                if fila[col] == resultados_reales[col] and fila[col] != "":
-                    puntos += 3
+            ranking = []
+            for _, fila in df_jugadores.iterrows():
+                puntos = 0
+                for col in df_prode.columns[3:]:
+                    if fila[col] == resultados_reales[col] and fila[col] != "":
+                        puntos += 3
+                ranking.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
             
-            ranking.append({
-                "Colaborador": fila["Apellido y Nombre"],
-                "Legajo": fila["Legajo"],
-                "Puntos": puntos
-            })
-
-        # 3. Mostrar la Tabla de Posiciones
-        df_ranking = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
-        
-        # Le damos un toque visual con colores
-        st.dataframe(
-            df_ranking.style.highlight_max(axis=0, color='#D1FAE5'),
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        # 4. Métrica del Líder
-        if not df_ranking.empty:
-            lider = df_ranking.iloc[0]["Colaborador"]
-            puntaje_lider = df_ranking.iloc[0]["Puntos"]
-            st.metric(label="🏆 Puntero Actual", value=lider, delta=f"{puntaje_lider} pts")
-
-except Exception as e:
-    st.info("La tabla de posiciones se activará cuando empiecen a cargar los resultados reales.")
-
-# --- PESTAÑA DE TENDENCIAS ---
-with st.expander("📈 Ver Tendencias y Estadísticas de la Oficina"):
-    if not df_prode.empty:
-        st.markdown("### ¿Qué dice la mayoría en Exincor?")
-        
-        # 1. Procesamos los datos para ver favoritos
-        # Contamos cuántas veces aparece cada equipo como ganador en los votos de la gente
-        todos_los_votos = df_prode.iloc[1:].melt(id_vars=['Apellido y Nombre'], value_vars=df_prode.columns[3:])
-        votos_ganadores = todos_los_votos[~todos_los_votos['value'].str.contains("Empate")]
-        
-        # Limpiamos el texto para quedarnos solo con el nombre del equipo
-        votos_ganadores['Equipo'] = votos_ganadores['value'].str.split(" Gana ").str[-1]
-        top_favoritos = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
-        
-        col_graf1, col_graf2 = st.columns(2)
-        
-        with col_graf1:
-            st.write("**Top 10 Equipos Favoritos (Más votados como ganadores)**")
-            fig_fav = px.bar(top_favoritos, x='count', y='Equipo', orientation='h', 
-                             color_discrete_sequence=['#1E3A8A'], labels={'count':'Votos', 'index':'Equipo'})
-            fig_fav.update_layout(height=400, margin=dict(t=0, b=0, l=0, r=0))
-            st.plotly_chart(fig_fav, use_container_width=True)
-
-        with col_graf2:
-            st.write("**Distribución de Resultados**")
-            # Vemos si la gente es más de arriesgar a un ganador o si votan muchos empates
-            tipo_voto = []
-            for v in todos_los_votos['value']:
-                if "Empate" in v: tipo_voto.append("Empate")
-                else: tipo_voto.append("Ganador (L o V)")
+            df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
+            st.dataframe(df_rank, use_container_width=True, hide_index=True)
             
-            df_tipo = pd.DataFrame(tipo_voto, columns=["Tipo"])
-            fig_pie = px.pie(df_tipo, names='Tipo', hole=0.5, color_discrete_sequence=['#3B82F6', '#94A3B8'])
-            st.plotly_chart(fig_pie, use_container_width=True)
-
-        st.markdown("---")
-        st.write("**🔍 Analizador de Partidos**")
-        partido_seleccionar = st.selectbox("Elegí un partido para ver la tendencia de voto:", df_prode.columns[3:])
-        
-        tendencia_partido = df_prode.iloc[1:][partido_seleccionar].value_counts(normalize=True) * 100
-        df_tendencia = tendencia_partido.reset_index()
-        df_tendencia.columns = ['Opción', 'Porcentaje']
-        
-        fig_tend = px.bar(df_tendencia, x='Opción', y='Porcentaje', text=df_tendencia['Porcentaje'].apply(lambda x: f'{x:.1f}%'),
-                          color='Opción', color_discrete_sequence=['#1E3A8A', '#64748B', '#3B82F6'])
-        st.plotly_chart(fig_tend, use_container_width=True)
-
+            if not df_rank.empty:
+                st.metric("🏆 Líder Actual", df_rank.iloc[0]["Colaborador"], f"{df_rank.iloc[0]['Puntos']} pts")
+        else:
+            st.info("💡 El ranking se activará cuando cargues la fila 'RESULTADOS OFICIALES' en el Sheet.")
     else:
-        st.info("Cuando más gente complete el Prode, acá verás los gráficos de tendencia.")
+        st.info("Aún no hay datos para mostrar.")
+
+with tab_stats:
+    if not df_prode.empty:
+        df_solo_votos = df_prode[~df_prode['Apellido y Nombre'].str.contains("RESULTADOS", na=False)]
+        if not df_solo_votos.empty:
+            st.subheader("¿En quién confía Exincor?")
+            
+            # Gráfico de Favoritos
+            todos_votos = df_solo_votos.melt(id_vars=['Apellido y Nombre'], value_vars=df_prode.columns[3:])
+            votos_ganadores = todos_votos[~todos_votos['value'].str.contains("Empate")].copy()
+            votos_ganadores['Equipo'] = votos_ganadores['value'].str.split(" Gana ").str[-1]
+            
+            favs = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
+            fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top 10 Favoritos", color_discrete_sequence=['#1E3A8A'])
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Analizador por partido
+            st.divider()
+            partido_sel = st.selectbox("Analizá un partido específico:", df_prode.columns[3:])
+            tendencia = df_solo_votos[partido_sel].value_counts(normalize=True).reset_index()
+            tendencia.columns = ['Opción', 'Porcentaje']
+            tendencia['Porcentaje'] = tendencia['Porcentaje'] * 100
+            
+            fig_t = px.bar(tendencia, x='Opción', y='Porcentaje', text_auto='.1f', color='Opción')
+            st.plotly_chart(fig_t, use_container_width=True)
+    else:
+        st.info("Las tendencias aparecerán cuando haya pronósticos cargados.")
