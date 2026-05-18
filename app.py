@@ -59,88 +59,119 @@ def generar_partidos(equipos):
             (equipos[0], equipos[2]), (equipos[1], equipos[3]),
             (equipos[0], equipos[3]), (equipos[1], equipos[2])]
 
-# 3. CABECERA
-st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>🏆 Prode Mundial 2026 - Exincor</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 18px;'>Cargá tus pronósticos y seguí el ranking de la oficina en vivo.</p>", unsafe_allow_html=True)
+# 3. CABECERA CORPORATIVA EXINCOR
+st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-family: Arial;'>🏆 Prode Mundial 2026 - Exincor</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 18px; color: #64748B;'>Cargá tus pronósticos y seguí el ranking de la oficina en vivo.</p>", unsafe_allow_html=True)
 
 # PESTAÑAS PRINCIPALES
 tab_voto, tab_ranking, tab_stats = st.tabs(["⚽ Cargar Pronósticos", "📊 Tabla de Posiciones", "📈 Tendencias"])
 
 with tab_voto:
-    espacio_izq, col_central, espacio_der = st.columns([1, 2.5, 1])
+    espacio_izq, col_central, espacio_der = st.columns([1, 2.8, 1])
     with col_central:
-        st.subheader("👤 Tus Datos Personales")
+        
+        # SECCIÓN DATOS PERSONALES
+        st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 15px;'><h3 style='color: white; margin: 0; font-size: 18px;'>👤 1. Tus Datos Personales</h3></div>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1: nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan")
         with c2: legajo = st.text_input("Legajo", placeholder="Tu número de legajo")
         
-        st.markdown("---")
-        st.subheader("🔮 Tus Pronósticos")
-        st.caption("Seleccioná cada pestaña para completar los partidos de ese grupo.")
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # SECCIÓN PRONÓSTICOS
+        st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Completá los Partidos</h3></div>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Hacé clic en cada pestaña (Grupo A al L) y elegí tu opción. No olvides ninguna.</p>", unsafe_allow_html=True)
         
         n_grupos = list(grupos.keys())
         tabs_grupos = st.tabs(n_grupos)
-        respuestas = {}
         
+        # Inicializamos las variables de control en session_state para que no se borren
+        if "votos" not in st.session_state:
+            st.session_state.votos = {}
+
         for i, (n_grupo, equipos) in enumerate(grupos.items()):
             with tabs_grupos[i]:
-                st.markdown(f"#### 🏆 {n_grupo}")
+                st.markdown(f"<h3 style='color: #1E3A8A; margin-top: 10px;'>🏆 {n_grupo}</h3>", unsafe_allow_html=True)
                 partidos = generar_partidos(equipos)
                 
                 for j, partido in enumerate(partidos):
                     loc, vis = partido[0], partido[1]
                     s_L, s_V = siglas.get(loc, "---"), siglas.get(vis, "---")
                     
-                    # Estructura limpia en una sola fila por partido
+                    # Contenedor estético por partido con borde
                     with st.container(border=True):
-                        col_txt, col_sel = st.columns([3, 2])
-                        with col_txt:
-                            st.markdown(f"**Partido {j+1}:** {loc} vs. {vis}")
+                        st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {j+1}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
                         
                         clave = f"{n_grupo}_Match_{j}"
-                        opciones = [f"[{s_L}] Gana {loc}", "🤝 Empate", f"[{s_V}] Gana {vis}"]
+                        opciones = ["Sin seleccionar", f"[{s_L}] Gana {loc}", "🤝 Empate", f"[{s_V}] Gana {vis}"]
                         
-                        with col_sel:
-                            respuestas[clave] = st.selectbox(
-                                "Resultado", 
-                                options=opciones, 
-                                label_visibility="collapsed", 
-                                key=clave
-                            )
-        
-        # BOTÓN DE ENVÍO FIJO (AFUERA DE LAS PESTAÑAS)
+                        # Guardamos de forma persistente lo seleccionado usando session_state
+                        default_idx = opciones.index(st.session_state.votos[clave]) if clave in st.session_state.votos else 0
+                        
+                        seleccion = st.radio(
+                            label=f"Opciones_{clave}",
+                            options=opciones,
+                            index=default_idx,
+                            horizontal=True,
+                            label_visibility="collapsed",
+                            key=f"radio_{clave}"
+                        )
+                        st.session_state.votos[clave] = seleccion
+
+        # BOTÓN DE ENVÍO ÚNICO AL FINAL (FUERA DE LAS PESTAÑAS)
         st.markdown("---")
-        st.warning("⚠️ Asegurate de haber revisado todos los grupos desde el A hasta el L antes de enviar.")
+        st.markdown("<div style='text-align: center; color: #64748B; font-size: 14px; margin-bottom: 10px;'>Al hacer clic abajo, el sistema revisará que todo esté completo.</div>", unsafe_allow_html=True)
         enviado = st.button("🚀 ENVIAR MI PRODE COMPLETO", use_container_width=True, type="primary")
 
         if enviado:
+            # 1. Validar Datos Personales
             if nombre.strip() == "" or legajo.strip() == "":
-                st.error("🚫 Por favor, completá tu Nombre y tu Legajo antes de enviar.")
+                st.error("🚫 Error: Por favor, ingresá tu Nombre y tu Legajo en la parte superior.")
             else:
-                with st.spinner("Guardando tus pronósticos..."):
-                    hoja = conectar_sheet()
-                    if hoja:
-                        # CONTROL DE DUPLICADOS
-                        datos_completos = hoja.get_all_records()
-                        df_check = pd.DataFrame(datos_completos)
-                        ya_existe = False
-                        if not df_check.empty and 'Legajo' in df_check.columns:
-                            if str(legajo).strip() in df_check['Legajo'].astype(str).values:
-                                ya_existe = True
-                        
-                        if ya_existe:
-                            st.error(f"🚫 El legajo {legajo} ya registró sus pronósticos anteriormente.")
-                        else:
-                            nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre, legajo]
-                            for n_g in n_grupos:
-                                for j in range(6):
-                                    nueva_fila.append(respuestas[f"{n_g}_Match_{j}"])
-                            try:
-                                hoja.append_row(nueva_fila)
-                                st.balloons()
-                                st.success("✅ ¡Tus pronósticos se guardaron correctamente! Mucha suerte.")
-                            except Exception as e:
-                                st.error(f"Error al escribir en la base de datos: {e}")
+                # 2. Validar que no falte ningún partido por votar
+                incompletos = []
+                for n_g in n_grupos:
+                    for j in range(6):
+                        c_key = f"{n_g}_Match_{j}"
+                        if c_key not in st.session_state.votos or st.session_state.votos[c_key] == "Sin seleccionar":
+                            incompletos.append(n_g)
+                            break # Con que falte uno en el grupo, ya lo marcamos
+                
+                if incompletos:
+                    # Quitamos duplicados de nombres de grupos
+                    incompletos_unicos = list(set(incompletos))
+                    incompletos_unicos.sort()
+                    grupos_texto = ", ".join(incompletos_unicos)
+                    st.error(f"⚠️ ¡No podés enviar el Prode todavía! Te faltan completar partidos en: **{grupos_texto}**.")
+                else:
+                    # 3. Guardar y controlar duplicados por Legajo
+                    with st.spinner("Conectando con el servidor Exincor..."):
+                        hoja = conectar_sheet()
+                        if hoja:
+                            datos_completos = hoja.get_all_records()
+                            df_check = pd.DataFrame(datos_completos)
+                            ya_existe = False
+                            
+                            if not df_check.empty and 'Legajo' in df_check.columns:
+                                if str(legajo).strip() in df_check['Legajo'].astype(str).values:
+                                    ya_existe = True
+                            
+                            if ya_existe:
+                                st.error(f"🚫 Acceso denegado: El legajo {legajo} ya registró sus pronósticos. Solo se permite 1 carga por persona.")
+                            else:
+                                # Armamos la fila con la fecha, datos y las respuestas limpias
+                                nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
+                                for n_g in n_grupos:
+                                    for j in range(6):
+                                        nueva_fila.append(st.session_state.votos[f"{n_g}_Match_{j}"])
+                                try:
+                                    hoja.append_row(nueva_fila)
+                                    st.balloons()
+                                    st.success("✅ ¡Excelente! Tus pronósticos se guardaron de forma segura en Exincor. ¡Mucha suerte!")
+                                    # Limpiamos para evitar re-envíos accidentales
+                                    st.session_state.votos = {}
+                                except Exception as e:
+                                    st.error(f"Error técnico al escribir en la planilla: {e}")
 
 # DESCARGA DE DATOS PARA VISUALIZACIÓN
 try:
