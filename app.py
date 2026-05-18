@@ -14,44 +14,34 @@ usuario_github = "rebecaesthervera"
 repositorio = "prode-mundial-exincor"
 nombre_imagen = "fondo_exincor.jpeg.jpeg"
 
-# URL para acceder al archivo original en GitHub
 url_raw_github = f"https://raw.githubusercontent.com/{usuario_github}/{repositorio}/main/{nombre_imagen}"
 
 st.markdown(
     f"""
     <style>
-    /* Ocultar espacios vacíos superiores nativos de Streamlit */
     .block-container {{
         padding-top: 0rem !important;
         padding-bottom: 2rem !important;
         max-width: 100% !important;
     }}
-    
-    /* Crear el Banner Superior Corporativo */
     .banner-exincor {{
         background-image: url("{url_raw_github}");
         background-size: cover;
         background-position: center;
         width: 100%;
-        height: 280px; /* Altura ideal para que no tape toda la pantalla */
+        height: 280px;
         margin-bottom: 25px;
         box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
     }}
-    
-    /* Fondo celeste claro sutil para el resto de la aplicación */
     .stApp {{
         background-color: #EBF4FA;
     }}
-    
-    /* Contenedores blancos bien definidos y legibles */
     [data-testid="stVerticalBlockBorderWrapper"] {{
         background-color: #FFFFFF !important;
         border-radius: 12px;
         padding: 22px;
         box-shadow: 0px 3px 8px rgba(0,0,0,0.06);
     }}
-    
-    /* Diseño limpio para las pestañas generales */
     .stTabs [data-baseweb="tab-list"] {{
         background-color: #FFFFFF;
         padding: 6px;
@@ -59,7 +49,6 @@ st.markdown(
         box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
     }}
     </style>
-    
     <div class="banner-exincor"></div>
     """,
     unsafe_allow_html=True
@@ -115,22 +104,23 @@ def generar_partidos(equipos):
             (equipos[0], equipos[2]), (equipos[1], equipos[3]),
             (equipos[0], equipos[3]), (equipos[1], equipos[2])]
 
-# PESTAÑAS PRINCIPALES (Sin los títulos HTML de texto antiguos)
-tab_voto, tab_ranking, tab_stats = st.tabs(["⚽ Cargar Pronósticos", "📊 Tabla de Posiciones", "📈 Tendencias"])
+# PESTAÑAS PRINCIPALES (Nueva pestaña agregada al final)
+tab_voto, tab_ranking, tab_stats, tab_politicas = st.tabs([
+    "⚽ Cargar Pronósticos", 
+    "📊 Tabla de Posiciones", 
+    "📈 Tendencias", 
+    "📋 Reglamento y Políticas"
+])
 
 with tab_voto:
     espacio_izq, col_central, espacio_der = st.columns([1, 2.8, 1])
     with col_central:
-        
-        # SECCIÓN DATOS PERSONALES
         st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 15px;'><h3 style='color: white; margin: 0; font-size: 18px;'>👤 1. Tus Datos Personales</h3></div>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1: nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan")
         with c2: legajo = st.text_input("Legajo", placeholder="Tu número de legajo")
         
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        # SECCIÓN PRONÓSTICOS
         st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Completá los Partidos</h3></div>", unsafe_allow_html=True)
         st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Hacé clic en cada pestaña (Grupo A al L) y elegí tu opción. No olvides ninguna.</p>", unsafe_allow_html=True)
         
@@ -151,7 +141,6 @@ with tab_voto:
                     
                     with st.container(border=True):
                         st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {j+1}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
-                        
                         clave = f"{n_grupo}_Match_{j}"
                         opciones = ["Sin seleccionar", f"[{s_L}] Gana {loc}", "🤝 Empate", f"[{s_V}] Gana {vis}"]
                         
@@ -167,9 +156,7 @@ with tab_voto:
                         )
                         st.session_state.votos[clave] = seleccion
 
-        # BOTÓN DE ENVÍO ÚNICO AL FINAL
         st.markdown("---")
-        st.markdown("<div style='text-align: center; color: #64748B; font-size: 14px; margin-bottom: 10px;'>Al hacer clic abajo, el sistema revisará que todo esté completo.</div>", unsafe_allow_html=True)
         enviado = st.button("🚀 ENVIAR MI PRODE COMPLETO", use_container_width=True, type="primary")
 
         if enviado:
@@ -196,13 +183,12 @@ with tab_voto:
                             datos_completos = hoja.get_all_records()
                             df_check = pd.DataFrame(datos_completos)
                             ya_existe = False
-                            
                             if not df_check.empty and 'Legajo' in df_check.columns:
                                 if str(legajo).strip() in df_check['Legajo'].astype(str).values:
                                     ya_existe = True
                             
                             if ya_existe:
-                                st.error(f"🚫 Acceso denegado: El legajo {legajo} ya registró sus pronósticos. Solo se permite 1 carga por persona.")
+                                st.error(f"🚫 Acceso denegado: El legajo {legajo} ya registró sus pronósticos.")
                             else:
                                 nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
                                 for n_g in n_grupos:
@@ -258,3 +244,27 @@ with tab_stats:
             favs = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
             fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top 10 Favoritos", color_discrete_sequence=['#1E3A8A'])
             st.plotly_chart(fig, use_container_width=True)
+
+# 📋 NUEVA PESTAÑA: BASES Y CONDICIONES (REGLAMENTO)
+with tab_politicas:
+    st.markdown("<h2 style='color: #1E3A8A;'>📜 Reglamento Oficial y Políticas del Prode Exincor 2026</h2>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    st.markdown("""
+    ### 👤 1. Políticas de Participación
+    * **Límite de registro:** Se permite estrictamente **una (1) sola carga por empleado (Legajo)**. El sistema bloqueará de forma automática cualquier intento de duplicación.
+    * **Modificaciones:** Una vez enviado el formulario, las predicciones son de carácter **irrevocable**. Cualquier error de tipeo interno deberá notificarse a Recursos Humanos antes del inicio del torneo.
+    * **Cierre de carga:** La plataforma cerrará la recepción de pronósticos exactamente **5 minutos antes** del pitazo inicial del primer partido del Mundial.
+    
+    ### 🔢 2. Sistema de Puntuación
+    * **Acierto completo (+3 Puntos):** Sumás 3 puntos si acertás al ganador exacto del partido o si pronosticás un empate y el partido termina igualado.
+    * **No acierto (0 Puntos):** Si el resultado real no coincide con tu pronóstico, sumás 0 puntos (no se restan puntos por errar).
+    
+    ### ⚽ 3. Regla de Oro para Fases Eliminatorias (Octavos en adelante)
+    * **Resultado Válido:** Para el cálculo de puntos del Prode, el resultado que se toma como oficial es el obtenido **al finalizar los 90 minutos de juego reglamentarios (o prórroga de alargue si la hubiese)**.
+    * **¿Qué pasa con los penales?:** La tanda de penales **no se contabiliza** para el Prode. Si un partido se define en penales, significa que el partido terminó empatado, por lo tanto, el resultado oficial para el sistema será **🤝 Empate**.
+    
+    ### 🎁 4. Premiaciones
+    * Se entregarán menciones o premios sorpresa intermedios a quienes lideren los aciertos individuales por grupos durante la primera ronda.
+    * Los premios principales (Grandes Premios Corporativos) se otorgarán al **1°, 2° y 3° puesto de la Tabla General** una vez finalizado el partido de la Final del Mundial.
+    """)
