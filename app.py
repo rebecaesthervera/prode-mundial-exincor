@@ -9,12 +9,12 @@ import plotly.express as px
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
 
-# --- CONFIGURACIÓN DE FONDO DESDE GITHUB (YA CORREGIDO CON TUS DATOS REALES) ---
-usuario_github = "Damymerlos"
-repositorio = "Prode"
-nombre_imagen = "fondo_exincor.jpg"
+# --- CONFIGURACIÓN DE FONDO DESDE GITHUB (CORREGIDO DE REBECAESTHERVERA) ---
+usuario_github = "rebecaesthervera"
+repositorio = "prode-mundial-exincor"
+nombre_imagen = "fondo_exincor.jpeg.jpeg"  # Nombre exacto detectado en tu captura
 
-# URL para acceder al archivo original en GitHub
+# URL para acceder al archivo crudo en GitHub
 url_raw_github = f"https://raw.githubusercontent.com/{usuario_github}/{repositorio}/main/{nombre_imagen}"
 
 st.markdown(
