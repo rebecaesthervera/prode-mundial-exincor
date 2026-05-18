@@ -5,27 +5,16 @@ from google.oauth2.service_account import Credentials
 import json
 from datetime import datetime
 import plotly.express as px
-import base64  # <-- Nueva librería para cargar la imagen local
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
 
-# --- FUNCIÓN PARA CARGAR LA IMAGEN DE FONDO LOCAL ---
-def cargar_imagen_local(ruta_imagen):
-    try:
-        with open(ruta_imagen, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-        return f"data:image/jpeg;base64,{encoded_string}"
-    except Exception as e:
-        return None
+# --- CONFIGURACIÓN DE FONDO DESDE GITHUB (YA CORREGIDO CON TUS DATOS REALES) ---
+usuario_github = "Damymerlos"
+repositorio = "Prode"
+nombre_imagen = "fondo_exincor.jpg"
 
-# --- FONDO DESDE GITHUB ---
-# Reemplaza con tus datos de GitHub exactos:
-usuario_github = "TU_USUARIO_DE_GITHUB"
-repositorio = "NOMBRE_DE_TU_REPOSITORIO"
-nombre_imagen = "fondo_exincor.jpeg"
-
-# URL para acceder al archivo crudo (raw) en GitHub
+# URL para acceder al archivo original en GitHub
 url_raw_github = f"https://raw.githubusercontent.com/{usuario_github}/{repositorio}/main/{nombre_imagen}"
 
 st.markdown(
@@ -39,7 +28,7 @@ st.markdown(
         background-position: center;
     }}
     
-    /* Contenedor blanco semi-transparente para que se lee perfecto */
+    /* Contenedor blanco semi-transparente para que sea híper legible */
     [data-testid="stVerticalBlockBorderWrapper"] {{
         background-color: rgba(255, 255, 255, 0.94) !important;
         border-radius: 12px;
@@ -57,36 +46,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-if imagen_base64:
-    st.markdown(
-        f"""
-        <style>
-        /* Aplicar el fondo a toda la app */
-        .stApp {{
-            background-image: url("{imagen_base64}");
-            background-attachment: fixed;
-            background-size: cover;
-            background-position: center;
-        }}
-        
-        /* Contenedor blanco semi-transparente para que se lea perfecto en personas mayores */
-        [data-testid="stVerticalBlockBorderWrapper"] {{
-            background-color: rgba(255, 255, 255, 0.94) !important;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
-        }}
-        
-        /* Estilo para las pestañas (Tabs) */
-        .stTabs [data-baseweb="tab-list"] {{
-            background-color: rgba(255, 255, 255, 0.85);
-            padding: 5px;
-            border-radius: 8px;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
 # --- FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS ---
 def conectar_sheet():
