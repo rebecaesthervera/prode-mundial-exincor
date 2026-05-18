@@ -19,9 +19,44 @@ def cargar_imagen_local(ruta_imagen):
     except Exception as e:
         return None
 
-# Cargamos tu imagen (Asegurate de que esté en la misma carpeta y renombrada así)
-imagen_base64 = cargar_imagen_local("fondo_exincor.jpeg")
+# --- FONDO DESDE GITHUB ---
+# Reemplaza con tus datos de GitHub exactos:
+usuario_github = "TU_USUARIO_DE_GITHUB"
+repositorio = "NOMBRE_DE_TU_REPOSITORIO"
+nombre_imagen = "fondo_exincor.jpeg"
 
+# URL para acceder al archivo crudo (raw) en GitHub
+url_raw_github = f"https://raw.githubusercontent.com/{usuario_github}/{repositorio}/main/{nombre_imagen}"
+
+st.markdown(
+    f"""
+    <style>
+    /* Aplicar el fondo a toda la app */
+    .stApp {{
+        background-image: url("{url_raw_github}");
+        background-attachment: fixed;
+        background-size: cover;
+        background-position: center;
+    }}
+    
+    /* Contenedor blanco semi-transparente para que se lee perfecto */
+    [data-testid="stVerticalBlockBorderWrapper"] {{
+        background-color: rgba(255, 255, 255, 0.94) !important;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+    }}
+    
+    /* Estilo para las pestañas (Tabs) */
+    .stTabs [data-baseweb="tab-list"] {{
+        background-color: rgba(255, 255, 255, 0.85);
+        padding: 5px;
+        border-radius: 8px;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 if imagen_base64:
     st.markdown(
         f"""
