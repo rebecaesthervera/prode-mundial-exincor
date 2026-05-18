@@ -9,40 +9,58 @@ import plotly.express as px
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
 
-# --- CONFIGURACIÓN DE FONDO DESDE GITHUB (CORREGIDO DE REBECAESTHERVERA) ---
+# --- CONFIGURACIÓN DE BANNER SUPERIOR DESDE GITHUB ---
 usuario_github = "rebecaesthervera"
 repositorio = "prode-mundial-exincor"
-nombre_imagen = "fondo_exincor.jpeg.jpeg"  # Nombre exacto detectado en tu captura
+nombre_imagen = "fondo_exincor.jpeg.jpeg"
 
-# URL para acceder al archivo crudo en GitHub
+# URL para acceder al archivo original en GitHub
 url_raw_github = f"https://raw.githubusercontent.com/{usuario_github}/{repositorio}/main/{nombre_imagen}"
 
 st.markdown(
     f"""
     <style>
-    /* Aplicar el fondo a toda la app */
-    .stApp {{
+    /* Ocultar espacios vacíos superiores nativos de Streamlit */
+    .block-container {{
+        padding-top: 0rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 100% !important;
+    }}
+    
+    /* Crear el Banner Superior Corporativo */
+    .banner-exincor {{
         background-image: url("{url_raw_github}");
-        background-attachment: fixed;
         background-size: cover;
         background-position: center;
+        width: 100%;
+        height: 280px; /* Altura ideal para que no tape toda la pantalla */
+        margin-bottom: 25px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
     }}
     
-    /* Contenedor blanco semi-transparente para que sea híper legible */
+    /* Fondo celeste claro sutil para el resto de la aplicación */
+    .stApp {{
+        background-color: #EBF4FA;
+    }}
+    
+    /* Contenedores blancos bien definidos y legibles */
     [data-testid="stVerticalBlockBorderWrapper"] {{
-        background-color: rgba(255, 255, 255, 0.94) !important;
+        background-color: #FFFFFF !important;
         border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+        padding: 22px;
+        box-shadow: 0px 3px 8px rgba(0,0,0,0.06);
     }}
     
-    /* Estilo para las pestañas (Tabs) */
+    /* Diseño limpio para las pestañas generales */
     .stTabs [data-baseweb="tab-list"] {{
-        background-color: rgba(255, 255, 255, 0.85);
-        padding: 5px;
+        background-color: #FFFFFF;
+        padding: 6px;
         border-radius: 8px;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
     }}
     </style>
+    
+    <div class="banner-exincor"></div>
     """,
     unsafe_allow_html=True
 )
@@ -97,11 +115,7 @@ def generar_partidos(equipos):
             (equipos[0], equipos[2]), (equipos[1], equipos[3]),
             (equipos[0], equipos[3]), (equipos[1], equipos[2])]
 
-# 3. CABECERA CORPORATIVA EXINCOR
-st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-family: Arial; font-weight: bold;'>🏆 Prode Mundial 2026 - Exincor</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 18px; color: #1E3A8A; font-weight: bold;'>Cargá tus pronósticos y seguí el ranking de la oficina en vivo.</p>", unsafe_allow_html=True)
-
-# PESTAÑAS PRINCIPALES
+# PESTAÑAS PRINCIPALES (Sin los títulos HTML de texto antiguos)
 tab_voto, tab_ranking, tab_stats = st.tabs(["⚽ Cargar Pronósticos", "📊 Tabla de Posiciones", "📈 Tendencias"])
 
 with tab_voto:
