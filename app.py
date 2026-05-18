@@ -5,9 +5,53 @@ from google.oauth2.service_account import Credentials
 import json
 from datetime import datetime
 import plotly.express as px
+import base64  # <-- Nueva librería para cargar la imagen local
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
+
+# --- FUNCIÓN PARA CARGAR LA IMAGEN DE FONDO LOCAL ---
+def cargar_imagen_local(ruta_imagen):
+    try:
+        with open(ruta_imagen, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        return f"data:image/jpeg;base64,{encoded_string}"
+    except Exception as e:
+        return None
+
+# Cargamos tu imagen (Asegurate de que esté en la misma carpeta y renombrada así)
+imagen_base64 = cargar_imagen_local("fondo_exincor.jpeg")
+
+if imagen_base64:
+    st.markdown(
+        f"""
+        <style>
+        /* Aplicar el fondo a toda la app */
+        .stApp {{
+            background-image: url("{imagen_base64}");
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+        }}
+        
+        /* Contenedor blanco semi-transparente para que se lea perfecto en personas mayores */
+        [data-testid="stVerticalBlockBorderWrapper"] {{
+            background-color: rgba(255, 255, 255, 0.94) !important;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+        }}
+        
+        /* Estilo para las pestañas (Tabs) */
+        .stTabs [data-baseweb="tab-list"] {{
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 5px;
+            border-radius: 8px;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 # --- FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS ---
 def conectar_sheet():
@@ -60,8 +104,8 @@ def generar_partidos(equipos):
             (equipos[0], equipos[3]), (equipos[1], equipos[2])]
 
 # 3. CABECERA CORPORATIVA EXINCOR
-st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-family: Arial;'>🏆 Prode Mundial 2026 - Exincor</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 18px; color: #64748B;'>Cargá tus pronósticos y seguí el ranking de la oficina en vivo.</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #1E3A8A; font-family: Arial; font-weight: bold;'>🏆 Prode Mundial 2026 - Exincor</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 18px; color: #1E3A8A; font-weight: bold;'>Cargá tus pronósticos y seguí el ranking de la oficina en vivo.</p>", unsafe_allow_html=True)
 
 # PESTAÑAS PRINCIPALES
 tab_voto, tab_ranking, tab_stats = st.tabs(["⚽ Cargar Pronósticos", "📊 Tabla de Posiciones", "📈 Tendencias"])
@@ -85,7 +129,6 @@ with tab_voto:
         n_grupos = list(grupos.keys())
         tabs_grupos = st.tabs(n_grupos)
         
-        # Inicializamos las variables de control en session_state para que no se borren
         if "votos" not in st.session_state:
             st.session_state.votos = {}
 
@@ -98,14 +141,12 @@ with tab_voto:
                     loc, vis = partido[0], partido[1]
                     s_L, s_V = siglas.get(loc, "---"), siglas.get(vis, "---")
                     
-                    # Contenedor estético por partido con borde
                     with st.container(border=True):
                         st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {j+1}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
                         
                         clave = f"{n_grupo}_Match_{j}"
                         opciones = ["Sin seleccionar", f"[{s_L}] Gana {loc}", "🤝 Empate", f"[{s_V}] Gana {vis}"]
                         
-                        # Guardamos de forma persistente lo seleccionado usando session_state
                         default_idx = opciones.index(st.session_state.votos[clave]) if clave in st.session_state.votos else 0
                         
                         seleccion = st.radio(
@@ -118,33 +159,29 @@ with tab_voto:
                         )
                         st.session_state.votos[clave] = seleccion
 
-        # BOTÓN DE ENVÍO ÚNICO AL FINAL (FUERA DE LAS PESTAÑAS)
+        # BOTÓN DE ENVÍO ÚNICO AL FINAL
         st.markdown("---")
         st.markdown("<div style='text-align: center; color: #64748B; font-size: 14px; margin-bottom: 10px;'>Al hacer clic abajo, el sistema revisará que todo esté completo.</div>", unsafe_allow_html=True)
         enviado = st.button("🚀 ENVIAR MI PRODE COMPLETO", use_container_width=True, type="primary")
 
         if enviado:
-            # 1. Validar Datos Personales
             if nombre.strip() == "" or legajo.strip() == "":
                 st.error("🚫 Error: Por favor, ingresá tu Nombre y tu Legajo en la parte superior.")
             else:
-                # 2. Validar que no falte ningún partido por votar
                 incompletos = []
                 for n_g in n_grupos:
                     for j in range(6):
                         c_key = f"{n_g}_Match_{j}"
                         if c_key not in st.session_state.votos or st.session_state.votos[c_key] == "Sin seleccionar":
                             incompletos.append(n_g)
-                            break # Con que falte uno en el grupo, ya lo marcamos
+                            break
                 
                 if incompletos:
-                    # Quitamos duplicados de nombres de grupos
                     incompletos_unicos = list(set(incompletos))
                     incompletos_unicos.sort()
                     grupos_texto = ", ".join(incompletos_unicos)
                     st.error(f"⚠️ ¡No podés enviar el Prode todavía! Te faltan completar partidos en: **{grupos_texto}**.")
                 else:
-                    # 3. Guardar y controlar duplicados por Legajo
                     with st.spinner("Conectando con el servidor Exincor..."):
                         hoja = conectar_sheet()
                         if hoja:
@@ -159,7 +196,6 @@ with tab_voto:
                             if ya_existe:
                                 st.error(f"🚫 Acceso denegado: El legajo {legajo} ya registró sus pronósticos. Solo se permite 1 carga por persona.")
                             else:
-                                # Armamos la fila con la fecha, datos y las respuestas limpias
                                 nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
                                 for n_g in n_grupos:
                                     for j in range(6):
@@ -168,7 +204,6 @@ with tab_voto:
                                     hoja.append_row(nueva_fila)
                                     st.balloons()
                                     st.success("✅ ¡Excelente! Tus pronósticos se guardaron de forma segura en Exincor. ¡Mucha suerte!")
-                                    # Limpiamos para evitar re-envíos accidentales
                                     st.session_state.votos = {}
                                 except Exception as e:
                                     st.error(f"Error técnico al escribir en la planilla: {e}")
