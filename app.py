@@ -104,7 +104,7 @@ def generar_partidos(equipos):
             (equipos[0], equipos[2]), (equipos[1], equipos[3]),
             (equipos[0], equipos[3]), (equipos[1], equipos[2])]
 
-# PESTAÑAS PRINCIPALES (Nueva pestaña agregada al final)
+# PESTAÑAS PRINCIPALES
 tab_voto, tab_ranking, tab_stats, tab_politicas = st.tabs([
     "⚽ Cargar Pronósticos", 
     "📊 Tabla de Posiciones", 
@@ -226,8 +226,30 @@ with tab_ranking:
             
             if ranking:
                 df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
+                
+                st.markdown("<h3 style='color: #1E3A8A; text-align: center; margin-bottom: 20px;'>🎖️ Podio Provisional Exincor</h3>", unsafe_allow_html=True)
+                podio_cols = st.columns(3)
+                
+                with podio_cols[0]:
+                    if len(df_rank) >= 1:
+                        st.metric("🥇 1° Puesto", df_rank.iloc[0]["Colaborador"], f"{df_rank.iloc[0]['Puntos']} pts")
+                    else:
+                        st.metric("🥇 1° Puesto", "---", "0 pts")
+                
+                with podio_cols[1]:
+                    if len(df_rank) >= 2:
+                        st.metric("🥈 2° Puesto", df_rank.iloc[1]["Colaborador"], f"{df_rank.iloc[1]['Puntos']} pts")
+                    else:
+                        st.metric("🥈 2° Puesto", "---", "0 pts")
+                
+                with podio_cols[2]:
+                    if len(df_rank) >= 3:
+                        st.metric("🥉 3° Puesto", df_rank.iloc[2]["Colaborador"], f"{df_rank.iloc[2]['Puntos']} pts")
+                    else:
+                        st.metric("🥉 3° Puesto", "---", "0 pts")
+                
+                st.markdown("---")
                 st.dataframe(df_rank, use_container_width=True, hide_index=True)
-                st.metric("🏆 Líder Actual", df_rank.iloc[0]["Colaborador"], f"{df_rank.iloc[0]['Puntos']} pts")
         else:
             st.info("💡 El ranking se activará cuando cargues la fila 'RESULTADOS OFICIALES' en la planilla.")
     else:
@@ -245,26 +267,28 @@ with tab_stats:
             fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top 10 Favoritos", color_discrete_sequence=['#1E3A8A'])
             st.plotly_chart(fig, use_container_width=True)
 
-# 📋 NUEVA PESTAÑA: BASES Y CONDICIONES (REGLAMENTO)
+# 📋 REGLAMENTO OFICIAL TOTALMENTE ADAPTADO A TU NUEVA NEGOCIACIÓN
 with tab_politicas:
     st.markdown("<h2 style='color: #1E3A8A;'>📜 Reglamento Oficial y Políticas del Prode Exincor 2026</h2>", unsafe_allow_html=True)
     st.markdown("---")
-    
     st.markdown("""
     ### 👤 1. Políticas de Participación
     * **Límite de registro:** Se permite estrictamente **una (1) sola carga por empleado (Legajo)**. El sistema bloqueará de forma automática cualquier intento de duplicación.
-    * **Modificaciones:** Una vez enviado el formulario, las predicciones son de carácter **irrevocable**. Cualquier error de tipeo interno deberá notificarse a Recursos Humanos antes del inicio del torneo.
+    * **Modificaciones:** Una vez enviado el formulario, las predicciones son de carácter **irrevocable**. Cualquier error deberá notificarse internamente a Recursos Humanos antes del inicio del torneo.
     * **Cierre de carga:** La plataforma cerrará la recepción de pronósticos exactamente **5 minutos antes** del pitazo inicial del primer partido del Mundial.
     
-    ### 🔢 2. Sistema de Puntuación
+    ### 🔢 2. Sistema de Puntuación y Fases
     * **Acierto completo (+3 Puntos):** Sumás 3 puntos si acertás al ganador exacto del partido o si pronosticás un empate y el partido termina igualado.
-    * **No acierto (0 Puntos):** Si el resultado real no coincide con tu pronóstico, sumás 0 puntos (no se restan puntos por errar).
+    * **Puntos Acumulativos:** Los puntos obtenidos durante la Fase de Grupos **se mantendrán y se seguirán acumulando** en la tabla general durante las fases eliminatorias (Octavos, Cuartos, Semifinal y Final). Cada acierto en las rondas finales seguirá valiendo 3 puntos.
     
     ### ⚽ 3. Regla de Oro para Fases Eliminatorias (Octavos en adelante)
     * **Resultado Válido:** Para el cálculo de puntos del Prode, el resultado que se toma como oficial es el obtenido **al finalizar los 90 minutos de juego reglamentarios (o prórroga de alargue si la hubiese)**.
     * **¿Qué pasa con los penales?:** La tanda de penales **no se contabiliza** para el Prode. Si un partido se define en penales, significa que el partido terminó empatado, por lo tanto, el resultado oficial para el sistema será **🤝 Empate**.
     
-    ### 🎁 4. Premiaciones
-    * Se entregarán menciones o premios sorpresa intermedios a quienes lideren los aciertos individuales por grupos durante la primera ronda.
-    * Los premios principales (Grandes Premios Corporativos) se otorgarán al **1°, 2° y 3° puesto de la Tabla General** una vez finalizado el partido de la Final del Mundial.
+    ### 🎁 4. Estructura Oficial de Grandes Premios
+    * **Premios de Primera Ronda (Fase de Grupos):** Al congelarse la tabla provisional al término de la primera fase, se entregarán **5 Premios Sorpresa Especiales (Camisetas Oficiales de la Selección Argentina)** a los colaboradores que ocupen los primeros 5 puestos del ranking general.
+    * **Grandes Premios Finales (Podio Definitivo):** Los puntos acumulados continuarán sumándose en las fases eliminatorias. Al concluir la final del Mundial, el podio definitivo se llevará los siguientes premios económicos:
+        * 🥇 **1° Puesto General:** Orden de compra por **$300.000**.
+        * 🥈 **2° Puesto General:** Orden de compra por **$100.000**.
+        * 🥉 **3° Puesto General:** Orden de compra por **$100.000**.
     """)
