@@ -267,7 +267,7 @@ with tab_stats:
             fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top 10 Favoritos", color_discrete_sequence=['#1E3A8A'])
             st.plotly_chart(fig, use_container_width=True)
 
-# 📋 REGLAMENTO OFICIAL TOTALMENTE ADAPTADO A TU NUEVA NEGOCIACIÓN
+# 📋 REGLAMENTO OFICIAL CON INCÓGNITA Y MISTERIO EMOCIONANTE
 with tab_politicas:
     st.markdown("<h2 style='color: #1E3A8A;'>📜 Reglamento Oficial y Políticas del Prode Exincor 2026</h2>", unsafe_allow_html=True)
     st.markdown("---")
@@ -286,9 +286,9 @@ with tab_politicas:
     * **¿Qué pasa con los penales?:** La tanda de penales **no se contabiliza** para el Prode. Si un partido se define en penales, significa que el partido terminó empatado, por lo tanto, el resultado oficial para el sistema será **🤝 Empate**.
     
     ### 🎁 4. Estructura Oficial de Grandes Premios
-    * **Premios de Primera Ronda (Fase de Grupos):** Al congelarse la tabla provisional al término de la primera fase, se entregarán **5 Premios Sorpresa Especiales (Camisetas Oficiales de la Selección Argentina)** a los colaboradores que ocupen los primeros 5 puestos del ranking general.
-    * **Grandes Premios Finales (Podio Definitivo):** Los puntos acumulados continuarán sumándose en las fases eliminatorias. Al concluir la final del Mundial, el podio definitivo se llevará los siguientes premios económicos:
-        * 🥇 **1° Puesto General:** Orden de compra por **$300.000**.
-        * 🥈 **2° Puesto General:** Orden de compra por **$100.000**.
-        * 🥉 **3° Puesto General:** Orden de compra por **$100.000**.
+    * **Premios de Primera Ronda (Fase de Grupos):** Al congelarse la tabla provisional al término de la primera fase, se entregarán **5 Grandes Premios Sorpresa Corporativos** a los colaboradores que logren consolidarse en los primeros 5 puestos del ranking general. ¡Preparate, es un reconocimiento que todo fanático va a querer tener!
+    * **Grandes Premios Finales (El Podio Definitivo del Mundial):** Los puntos acumulados continuarán sumándose en las fases eliminatorias hasta el último segundo del torneo. Al concluir la final del Mundial, el podio definitivo se consagrará con importantes premios económicos:
+        * 🥇 **1° Puesto General:** Importante **Orden de Compra Corporativa**.
+        * 🥈 **2° Puesto General:** Importante **Orden de Compra Corporativa**.
+        * 🥉 **3° Puesto General:** Importante **Orden de Compra Corporativa**.
     """)
