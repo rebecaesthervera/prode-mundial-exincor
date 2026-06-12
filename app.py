@@ -121,7 +121,7 @@ tab_voto, tab_ranking, tab_stats, tab_politicas = st.tabs([
 with tab_voto:
     espacio_izq, col_central, espacio_der = st.columns([1, 2.8, 1])
     with col_central:
-        # Cartel de Alerta Institucional si la carga está congelada
+        # Cartel de Alerta si el Prode está cerrado
         if PRONOSTICOS_BLOQUEADOS:
             st.warning("⚠️ **La carga y modificación de pronósticos se encuentra CERRADA temporalmente.** Los partidos ya están definidos o en juego. Podés revisar el fixture abajo en modo lectura.")
 
@@ -163,13 +163,13 @@ with tab_voto:
                             horizontal=True,
                             label_visibility="collapsed",
                             key=f"radio_{clave}",
-                            disabled=PRONOSTICOS_BLOQUEADOS # Bloquea los radio buttons dinámicamente
+                            disabled=PRONOSTICOS_BLOQUEADOS
                         )
                         st.session_state.votos[clave] = seleccion
 
         st.markdown("---")
         
-        # El botón de enviar solo se renderiza si la carga está abierta
+        # Botón dinámico según bloqueo
         if not PRONOSTICOS_BLOQUEADOS:
             enviado = st.button("🚀 ENVIAR MI PRODE COMPLETO", use_container_width=True, type="primary")
 
@@ -226,6 +226,7 @@ try:
 except:
     df_prode = pd.DataFrame()
 
+# PESTAÑA RANKING UNIFICADA CON HIGHLIGHT EN EL TOP 5
 with tab_ranking:
     if not df_prode.empty:
         mascara_oficial = df_prode['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
@@ -241,38 +242,31 @@ with tab_ranking:
                 ranking.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
             
             if ranking:
-                # ORDENAR Y FILTRAR EXCLUSIVAMENTE LOS 5 MEJORES (TOP 5)
-                df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False).head(5)
+                # 1. Armamos la tabla con todos los participantes ordenada de mayor a menor puntaje
+                df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
                 
-                # Ajustamos el índice para que arranque visualmente desde el puesto 1 al 5
+                # 2. Reindexamos para fijar los puestos del 1 en adelante
                 df_rank.index = range(1, len(df_rank) + 1)
                 df_rank.index.name = "Puesto"
+                df_rank = df_rank.reset_index()
+
+                st.markdown("<h3 style='color: #1E3A8A; text-align: center; margin-bottom: 5px;'>🏆 Tabla General de Posiciones Exincor</h3>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Destacados en color los 5 puestos líderes con acceso a Premios Sorpresa Corporativos de Primera Ronda.</p>", unsafe_allow_html=True)
                 
-                st.markdown("<h3 style='color: #1E3A8A; text-align: center; margin-bottom: 20px;'>🎖️ Top 5 - Liderazgo Provisional Exincor</h3>", unsafe_allow_html=True)
-                podio_cols = st.columns(3)
+                # 3. Función para sombrear las filas que se encuentren en el Top 5
+                def destacar_top5(row):
+                    if row['Puesto'] <= 5:
+                        return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
+                    return [''] * len(row)
                 
-                with podio_cols[0]:
-                    if len(df_rank) >= 1:
-                        st.metric("🥇 1° Puesto", df_rank.iloc[0]["Colaborador"], f"{df_rank.iloc[0]['Puntos']} pts")
-                    else:
-                        st.metric("🥇 1° Puesto", "---", "0 pts")
+                df_estilizado = df_rank.style.apply(destacar_top5, axis=1)
                 
-                with podio_cols[1]:
-                    if len(df_rank) >= 2:
-                        st.metric("🥈 2° Puesto", df_rank.iloc[1]["Colaborador"], f"{df_rank.iloc[1]['Puntos']} pts")
-                    else:
-                        st.metric("🥈 2° Puesto", "---", "0 pts")
-                
-                with podio_cols[2]:
-                    if len(df_rank) >= 3:
-                        st.metric("🥉 3° Puesto", df_rank.iloc[2]["Colaborador"], f"{df_rank.iloc[2]['Puntos']} pts")
-                    else:
-                        st.metric("🥉 3° Puesto", "---", "0 pts")
-                
-                st.markdown("---")
-                
-                # Desplegar dataframe recortado con los 5 mejores (quitamos hide_index para ver los puestos del 1 al 5)
-                st.dataframe(df_rank, use_container_width=True, hide_index=False)
+                # 4. Mostramos una sola tabla interactiva con toda la dotación
+                st.dataframe(
+                    df_estilizado, 
+                    use_container_width=True, 
+                    hide_index=True
+                )
         else:
             st.info("💡 El ranking se activará cuando cargues la fila 'RESULTADOS OFICIALES' en la planilla.")
     else:
