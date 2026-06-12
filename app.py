@@ -6,6 +6,12 @@ import json
 from datetime import datetime
 import plotly.express as px
 
+# =========================================================
+# ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
+# =========================================================
+# Cambiar a True para cerrar las jugadas / False para abrir la carga
+PRONOSTICOS_BLOQUEADOS = True 
+
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
 
@@ -115,10 +121,14 @@ tab_voto, tab_ranking, tab_stats, tab_politicas = st.tabs([
 with tab_voto:
     espacio_izq, col_central, espacio_der = st.columns([1, 2.8, 1])
     with col_central:
+        # Cartel de Alerta Institucional si la carga está congelada
+        if PRONOSTICOS_BLOQUEADOS:
+            st.warning("⚠️ **La carga y modificación de pronósticos se encuentra CERRADA temporalmente.** Los partidos ya están definidos o en juego. Podés revisar el fixture abajo en modo lectura.")
+
         st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 15px;'><h3 style='color: white; margin: 0; font-size: 18px;'>👤 1. Tus Datos Personales</h3></div>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
-        with c1: nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan")
-        with c2: legajo = st.text_input("Legajo", placeholder="Tu número de legajo")
+        with c1: nombre = st.text_input("Apellido y Nombre", placeholder="Ej: Perez, Juan", disabled=PRONOSTICOS_BLOQUEADOS)
+        with c2: legajo = st.text_input("Legajo", placeholder="Tu número de legajo", disabled=PRONOSTICOS_BLOQUEADOS)
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Completá los Partidos</h3></div>", unsafe_allow_html=True)
@@ -152,55 +162,61 @@ with tab_voto:
                             index=default_idx,
                             horizontal=True,
                             label_visibility="collapsed",
-                            key=f"radio_{clave}"
+                            key=f"radio_{clave}",
+                            disabled=PRONOSTICOS_BLOQUEADOS # Bloquea los radio buttons dinámicamente
                         )
                         st.session_state.votos[clave] = seleccion
 
         st.markdown("---")
-        enviado = st.button("🚀 ENVIAR MI PRODE COMPLETO", use_container_width=True, type="primary")
+        
+        # El botón de enviar solo se renderiza si la carga está abierta
+        if not PRONOSTICOS_BLOQUEADOS:
+            enviado = st.button("🚀 ENVIAR MI PRODE COMPLETO", use_container_width=True, type="primary")
 
-        if enviado:
-            if nombre.strip() == "" or legajo.strip() == "":
-                st.error("🚫 Error: Por favor, ingresá tu Nombre y tu Legajo en la parte superior.")
-            else:
-                incompletos = []
-                for n_g in n_grupos:
-                    for j in range(6):
-                        c_key = f"{n_g}_Match_{j}"
-                        if c_key not in st.session_state.votos or st.session_state.votos[c_key] == "Sin seleccionar":
-                            incompletos.append(n_g)
-                            break
-                
-                if incompletos:
-                    incompletos_unicos = list(set(incompletos))
-                    incompletos_unicos.sort()
-                    grupos_texto = ", ".join(incompletos_unicos)
-                    st.error(f"⚠️ ¡No podés enviar el Prode todavía! Te faltan completar partidos en: **{grupos_texto}**.")
+            if enviado:
+                if nombre.strip() == "" or legajo.strip() == "":
+                    st.error("🚫 Error: Por favor, ingresá tu Nombre y tu Legajo en la parte superior.")
                 else:
-                    with st.spinner("Conectando con el servidor Exincor..."):
-                        hoja = conectar_sheet()
-                        if hoja:
-                            datos_completos = hoja.get_all_records()
-                            df_check = pd.DataFrame(datos_completos)
-                            ya_existe = False
-                            if not df_check.empty and 'Legajo' in df_check.columns:
-                                if str(legajo).strip() in df_check['Legajo'].astype(str).values:
-                                    ya_existe = True
-                            
-                            if ya_existe:
-                                st.error(f"🚫 Acceso denegado: El legajo {legajo} ya registró sus pronósticos.")
-                            else:
-                                nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
-                                for n_g in n_grupos:
-                                    for j in range(6):
-                                        nueva_fila.append(st.session_state.votos[f"{n_g}_Match_{j}"])
-                                try:
-                                    hoja.append_row(nueva_fila)
-                                    st.balloons()
-                                    st.success("✅ ¡Excelente! Tus pronósticos se guardaron de forma segura en Exincor. ¡Mucha suerte!")
-                                    st.session_state.votos = {}
-                                except Exception as e:
-                                    st.error(f"Error técnico al escribir en la planilla: {e}")
+                    incompletos = []
+                    for n_g in n_grupos:
+                        for j in range(6):
+                            c_key = f"{n_g}_Match_{j}"
+                            if c_key not in st.session_state.votos or st.session_state.votos[c_key] == "Sin seleccionar":
+                                incompletos.append(n_g)
+                                break
+                    
+                    if incompletos:
+                        incompletos_unicos = list(set(incompletos))
+                        incompletos_unicos.sort()
+                        grupos_texto = ", ".join(incompletos_unicos)
+                        st.error(f"⚠️ ¡No podés enviar el Prode todavía! Te faltan completar partidos en: **{grupos_texto}**.")
+                    else:
+                        with st.spinner("Conectando con el servidor Exincor..."):
+                            hoja = conectar_sheet()
+                            if hoja:
+                                datos_completos = hoja.get_all_records()
+                                df_check = pd.DataFrame(datos_completos)
+                                ya_existe = False
+                                if not df_check.empty and 'Legajo' in df_check.columns:
+                                    if str(legajo).strip() in df_check['Legajo'].astype(str).values:
+                                        ya_existe = True
+                                
+                                if ya_existe:
+                                    st.error(f"🚫 Acceso denegado: El legajo {legajo} ya registró sus pronósticos.")
+                                else:
+                                    nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
+                                    for n_g in n_grupos:
+                                        for j in range(6):
+                                            nueva_fila.append(st.session_state.votos[f"{n_g}_Match_{j}"])
+                                    try:
+                                        hoja.append_row(nueva_fila)
+                                        st.balloons()
+                                        st.success("✅ ¡Excelente! Tus pronósticos se guardaron de forma segura en Exincor. ¡Mucha suerte!")
+                                        st.session_state.votos = {}
+                                    except Exception as e:
+                                        st.error(f"Error técnico al escribir en la planilla: {e}")
+        else:
+            st.info("🔒 El envío de formularios está deshabilitado temporalmente.")
 
 # DESCARGA DE DATOS PARA VISUALIZACIÓN
 try:
@@ -225,9 +241,14 @@ with tab_ranking:
                 ranking.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
             
             if ranking:
-                df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
+                # ORDENAR Y FILTRAR EXCLUSIVAMENTE LOS 5 MEJORES (TOP 5)
+                df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False).head(5)
                 
-                st.markdown("<h3 style='color: #1E3A8A; text-align: center; margin-bottom: 20px;'>🎖️ Podio Provisional Exincor</h3>", unsafe_allow_html=True)
+                # Ajustamos el índice para que arranque visualmente desde el puesto 1 al 5
+                df_rank.index = range(1, len(df_rank) + 1)
+                df_rank.index.name = "Puesto"
+                
+                st.markdown("<h3 style='color: #1E3A8A; text-align: center; margin-bottom: 20px;'>🎖️ Top 5 - Liderazgo Provisional Exincor</h3>", unsafe_allow_html=True)
                 podio_cols = st.columns(3)
                 
                 with podio_cols[0]:
@@ -249,7 +270,9 @@ with tab_ranking:
                         st.metric("🥉 3° Puesto", "---", "0 pts")
                 
                 st.markdown("---")
-                st.dataframe(df_rank, use_container_width=True, hide_index=True)
+                
+                # Desplegar dataframe recortado con los 5 mejores (quitamos hide_index para ver los puestos del 1 al 5)
+                st.dataframe(df_rank, use_container_width=True, hide_index=False)
         else:
             st.info("💡 El ranking se activará cuando cargues la fila 'RESULTADOS OFICIALES' en la planilla.")
     else:
@@ -267,7 +290,7 @@ with tab_stats:
             fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top 10 Favoritos", color_discrete_sequence=['#1E3A8A'])
             st.plotly_chart(fig, use_container_width=True)
 
-# 📋 REGLAMENTO OFICIAL CON INCÓGNITA Y MISTERIO EMOCIONANTE
+# 📋 REGLAMENTO OFICIAL
 with tab_politicas:
     st.markdown("<h2 style='color: #1E3A8A;'>📜 Reglamento Oficial y Políticas del Prode Exincor 2026</h2>", unsafe_allow_html=True)
     st.markdown("---")
