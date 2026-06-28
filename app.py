@@ -61,7 +61,7 @@ st.markdown(
 )
 
 # --- FUNCIÓN DE CONEXIÓN A GOOGLE SHEETS ---
-def conectar_sheet():
+def conectar_sheet(num_pestana):
     try:
         json_key = st.secrets["gcp_service_account"]["json_key"]
         info = json.loads(json_key, strict=False)
@@ -70,8 +70,8 @@ def conectar_sheet():
         client = gspread.authorize(creds)
         ID_PLANILLA = "1lrC5SJmWmpN5KIVRAlYbQk7AXVsb7NK0bZwMKQ4rU_E"
         spreadsheet = client.open_by_key(ID_PLANILLA)
-        # Apunta a la segunda pestaña (índice 1), llamada "16avos"
-        return spreadsheet.get_worksheet(1)
+        # Retorna la pestaña solicitada dinámicamente
+        return spreadsheet.get_worksheet(num_pestana)
     except Exception as e:
         return None
 
@@ -89,10 +89,11 @@ partidos_16avos = [
     {"id": "P8", "loc": "Argentina", "sigla_l": "ARG", "vis": "Cabo Verde", "sigla_v": "CPV"},
 ]
 
-# PESTAÑAS PRINCIPALES DEL SISTEMA
-tab_voto, tab_ranking, tab_stats, tab_politicas = st.tabs([
+# PESTAÑAS PRINCIPALES DEL SISTEMA (Añadida la pestaña histórica)
+tab_voto, tab_ranking, tab_antiguos, tab_stats, tab_politicas = st.tabs([
     "⚽ Cargar Pronósticos (16avos)", 
     "📊 Tabla de Posiciones", 
+    "🏅 Top 10 Primera Ronda",
     "📈 Tendencias", 
     "📋 Reglamento y Cuadro de Honor"
 ])
@@ -157,7 +158,7 @@ with tab_voto:
                         st.error("⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada.")
                     else:
                         with st.spinner("Guardando en el servidor Exincor..."):
-                            hoja = conectar_sheet()
+                            hoja = conectar_sheet(1) # Escribe en la pestaña de 16avos (índice 1)
                             if hoja:
                                 nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
                                 for partido in partidos_16avos:
@@ -173,25 +174,24 @@ with tab_voto:
         else:
             st.info("🔒 El envío de formularios está deshabilitado temporalmente.")
 
-# --- DESCARGA DE DATOS PARA RANKING (DESDE LA NUEVA PESTAÑA) ---
+# --- DESCARGA DE DATOS DESDE LA NUEVA PESTAÑA (16AVOS) ---
 try:
-    hoja = conectar_sheet()
-    datos = hoja.get_all_records()
-    df_prode = pd.DataFrame(datos)
-    
-    # SOLUCIÓN AL KEYERROR: Limpia automáticamente espacios fantasmas al inicio o final de los encabezados del Sheet
+    hoja_actual = conectar_sheet(1)
+    datos_actual = hoja_actual.get_all_records()
+    df_prode = pd.DataFrame(datos_actual)
     if not df_prode.empty:
         df_prode.columns = df_prode.columns.str.strip()
 except:
     df_prode = pd.DataFrame()
 
-# --- 2. PESTAÑA DE RANKING (DESDE CERO) ---
+# --- 2. PESTAÑA DE RANKING DE LA FASE ACTUAL ---
 with tab_ranking:
     if not df_prode.empty:
         mascara_oficial = df_prode['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
+        df_jugadores = df_prode[~mascara_oficial]
+        
         if mascara_oficial.any():
             resultados_reales = df_prode[mascara_oficial].iloc[0]
-            df_jugadores = df_prode[~mascara_oficial]
             ranking = []
             
             for _, fila in df_jugadores.iterrows():
@@ -210,7 +210,6 @@ with tab_ranking:
                 st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>🏆 Tabla de Posiciones - Fase Eliminatoria</h3>", unsafe_allow_html=True)
                 st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Destacados en color los 3 puestos líderes que compiten por los Grandes Premios Finales.</p>", unsafe_allow_html=True)
                 
-                # Función para sombrear a los 3 primeros líderes
                 def destacar_top3(row):
                     if row['Puesto'] <= 3:
                         return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
@@ -219,11 +218,76 @@ with tab_ranking:
                 df_estilizado = df_rank.style.apply(destacar_top3, axis=1)
                 st.dataframe(df_estilizado, use_container_width=True, hide_index=True)
         else:
-            st.info("💡 El ranking de esta fase se activará cuando se cargue la fila de 'RESULTADOS OFICIALES' en la pestaña '16avos'.")
+            st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📝 Colaboradores Registrados - 16avos</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>A continuación se muestran los empleados que ya guardaron con éxito sus apuestas de la fase.</p>", unsafe_allow_html=True)
+            
+            if not df_jugadores.empty:
+                df_registrados = df_jugadores[["Apellido y Nombre", "Legajo"]].copy()
+                df_registrados.columns = ["Colaborador", "Legajo"]
+                df_registrados.insert(0, "Estado", "✅ Guardado")
+                df_registrados.index = range(1, len(df_registrados) + 1)
+                df_registrados.index.name = "N°"
+                df_registrados = df_registrados.reset_index()
+                
+                def estilo_registro(row):
+                    return ['background-color: #FFFFFF; color: #1E3A8A;'] * len(row)
+                
+                st.dataframe(df_registrados.style.apply(estilo_registro, axis=1), use_container_width=True, hide_index=True)
+            else:
+                st.info("💡 Aún no se registraron jugadas. ¡Sé el primero en enviar tus pronósticos!")
     else:
         st.info("Aún no hay predicciones cargadas para esta fase.")
 
-# --- 3. PESTAÑA DE TENDENCIAS ---
+# --- 3. NUEVA PESTAÑA: RECUPERACIÓN EN VIVO DEL TOP 10 ANTERIOR ---
+with tab_antiguos:
+    st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📊 Top 10 Definitivo - Fase de Grupos</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Historial completo de los mejores puntajes acumulados durante la Primera Ronda del Prode.</p>", unsafe_allow_html=True)
+    
+    with st.spinner("Calculando tabla histórica desde la base de datos..."):
+        try:
+            hoja_vieja = conectar_sheet(0) # Apunta a la primera pestaña (Fase de Grupos)
+            datos_viejos = hoja_vieja.get_all_records()
+            df_viejo = pd.DataFrame(datos_viejos)
+            
+            if not df_viejo.empty:
+                df_viejo.columns = df_viejo.columns.str.strip()
+                mascara_oficial_viejos = df_viejo['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
+                
+                if mascara_oficial_viejos.any():
+                    resultados_reales_viejos = df_viejo[mascara_oficial_viejos].iloc[0]
+                    df_jugadores_viejos = df_viejo[~mascara_oficial_viejos]
+                    ranking_viejo = []
+                    
+                    for _, fila in df_jugadores_viejos.iterrows():
+                        puntos = 0
+                        for col in df_viejo.columns[3:]:
+                            if col in resultados_reales_viejos and fila[col] == resultados_reales_viejos[col] and fila[col] != "":
+                                puntos += 3
+                        ranking_viejo.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
+                    
+                    if ranking_viejo:
+                        df_rank_viejo = pd.DataFrame(ranking_viejo).sort_values(by="Puntos", ascending=False)
+                        df_rank_viejo.index = range(1, len(df_rank_viejo) + 1)
+                        df_rank_viejo.index.name = "Puesto"
+                        df_rank_viejo = df_rank_viejo.reset_index()
+                        
+                        # Extrae el Top 10
+                        df_top10 = df_rank_viejo.head(10)
+                        
+                        def destacar_top5_viejo(row):
+                            if row['Puesto'] <= 5:
+                                return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
+                            return [''] * len(row)
+                        
+                        st.dataframe(df_top10.style.apply(destacar_top5_viejo, axis=1), use_container_width=True, hide_index=True)
+                else:
+                    st.warning("No se encontró la fila 'RESULTADOS OFICIALES' en la pestaña original de grupos.")
+            else:
+                st.info("No se encontraron registros en la pestaña original.")
+        except Exception as e:
+            st.error(f"No se pudo cargar el historial: {e}")
+
+# --- 4. PESTAÑA DE TENDENCIAS ---
 with tab_stats:
     if not df_prode.empty:
         df_solo_votos = df_prode[~df_prode['Apellido y Nombre'].str.contains("RESULTADOS", na=False)]
@@ -237,9 +301,8 @@ with tab_stats:
                 fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top Favoritos de la Fase", color_discrete_sequence=['#1E3A8A'])
                 st.plotly_chart(fig, use_container_width=True)
 
-# --- 4. PESTAÑA DE REGLAMENTO Y CUADRO DE HONOR ---
+# --- 5. PESTAÑA DE REGLAMENTO Y CUADRO DE HONOR ---
 with tab_politicas:
-    # CUADRO DE HONOR EXCLUSIVO DE LA 1RA RONDA
     st.markdown("""
     <div style='background-color: #1E3A8A; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 25px;'>
         <h2 style='color: white; margin: 0;'>🎖️ CUADRO DE HONOR - GANADORES 1RA RONDA 🎖️</h2>
@@ -247,7 +310,6 @@ with tab_politicas:
     </div>
     """, unsafe_allow_html=True)
     
-    # Nombres extraídos fielmente de la tabla general previa
     col_ganadores = pd.DataFrame([
         {"Puesto": "🥇 1° Lugar", "Ganador": "Goyochea Axel Samuel", "Legajo": "637", "Puntos": "141 pts"},
         {"Puesto": "🥈 2° Lugar", "Ganador": "Guerrero Lautaro", "Legajo": "664", "Puntos": "138 pts"},
