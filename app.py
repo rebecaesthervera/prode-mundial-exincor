@@ -76,18 +76,17 @@ def conectar_sheet():
         return None
 
 # =========================================================
-# ⚽ 2. CONFIGURACIÓN DE LOS 8 PARTIDOS DE 16AVOS
+# ⚽ 2. CONFIGURACIÓN DE LOS PARTIDOS DE 16AVOS (REALES)
 # =========================================================
-# IMPORTANTE: Cambiá "Clasificado X" por los países reales que juegan.
 partidos_16avos = [
-    {"id": "P1", "loc": "Clasificado A1", "sigla_l": "A1", "vis": "Clasificado B2", "sigla_v": "B2"},
-    {"id": "P2", "loc": "Clasificado C1", "sigla_l": "C1", "vis": "Clasificado D2", "sigla_v": "D2"},
-    {"id": "P3", "loc": "Clasificado E1", "sigla_l": "E1", "vis": "Clasificado F2", "sigla_v": "F2"},
-    {"id": "P4", "loc": "Clasificado G1", "sigla_l": "G1", "vis": "Clasificado H2", "sigla_v": "H2"},
-    {"id": "P5", "loc": "Clasificado B1", "sigla_l": "B1", "vis": "Clasificado A2", "sigla_v": "A2"},
-    {"id": "P6", "loc": "Clasificado D1", "sigla_l": "D1", "vis": "Clasificado C2", "sigla_v": "C2"},
-    {"id": "P7", "loc": "Clasificado F1", "sigla_l": "F1", "vis": "Clasificado E2", "sigla_v": "E2"},
-    {"id": "P8", "loc": "Clasificado H1", "sigla_l": "H1", "vis": "Clasificado G2", "sigla_v": "G2"},
+    {"id": "P1", "loc": "Sudáfrica", "sigla_l": "RSA", "vis": "Canadá", "sigla_v": "CAN"},
+    {"id": "P2", "loc": "Brasil", "sigla_l": "BRA", "vis": "Japón", "sigla_v": "JPN"},
+    {"id": "P3", "loc": "Alemania", "sigla_l": "GER", "vis": "Paraguay", "sigla_v": "PAR"},
+    {"id": "P4", "loc": "Países Bajos", "sigla_l": "NED", "vis": "Marruecos", "sigla_v": "MAR"},
+    {"id": "P5", "loc": "Costa de Marfil", "sigla_l": "CIV", "vis": "Noruega", "sigla_v": "NOR"},
+    {"id": "P6", "loc": "Francia", "sigla_l": "FRA", "vis": "Suecia", "sigla_v": "SWE"},
+    {"id": "P7", "loc": "México", "sigla_l": "MEX", "vis": "Ecuador", "sigla_v": "ECU"},
+    {"id": "P8", "loc": "Argentina", "sigla_l": "ARG", "vis": "Cabo Verde", "sigla_v": "CPV"},
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
@@ -112,7 +111,7 @@ with tab_voto:
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos para la Fase Eliminatoria</h3></div>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Seleccioná tus predicciones. Recordá que los puntos comienzan desde cero para esta nueva etapa.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Seleccioná tus predicciones. Los puntos comienzan desde cero para esta nueva etapa.</p>", unsafe_allow_html=True)
         
         if "votos" not in st.session_state:
             st.session_state.votos = {}
@@ -244,7 +243,7 @@ with tab_politicas:
     </div>
     """, unsafe_allow_html=True)
     
-    # Tabla visual estática para recordar a los ganadores previos
+    # Podés reemplazar "Colaborador Ganador X" con los nombres reales de los ganadores anteriores
     col_ganadores = pd.DataFrame([
         {"Puesto": "🥇 1° Lugar", "Ganador": "Colaborador Ganador 1", "Premio": "Premio Sorpresa Corporativo"},
         {"Puesto": "🥈 2° Lugar", "Ganador": "Colaborador Ganador 2", "Premio": "Premio Sorpresa Corporativo"},
@@ -257,7 +256,7 @@ with tab_politicas:
     st.markdown("---")
     st.markdown("""
     ### 🔄 ¡Borrón y Cuenta Nueva!
-    Para mantener la emoción en toda la planta y garantizar que **todos los colaboradores sigan participando con chances reales**, el puntaje se ha reiniciado completamente a **0 puntos**. 
+    Para mantener la emoción en toda la planta y garantizar que **todos los colaboradores sigan participando con chances reales**, el puntaje se ha reiniciado completamente a **0 puntos** para esta fase eliminatoria. 
     
     ### 📋 Reglamento y Políticas de la Fase Eliminatoria
     * **Límite de registro:** Estrictamente **una (1) sola carga por Legajo** para toda la fase de 16avos.
