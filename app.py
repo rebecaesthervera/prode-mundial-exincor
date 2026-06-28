@@ -243,13 +243,13 @@ with tab_politicas:
     </div>
     """, unsafe_allow_html=True)
     
-    # Podés reemplazar "Colaborador Ganador X" con los nombres reales de los ganadores anteriores
+    # Nombres extraídos fielmente de la tabla general previa
     col_ganadores = pd.DataFrame([
-        {"Puesto": "🥇 1° Lugar", "Ganador": "Colaborador Ganador 1", "Premio": "Premio Sorpresa Corporativo"},
-        {"Puesto": "🥈 2° Lugar", "Ganador": "Colaborador Ganador 2", "Premio": "Premio Sorpresa Corporativo"},
-        {"Puesto": "🥉 3° Lugar", "Ganador": "Colaborador Ganador 3", "Premio": "Premio Sorpresa Corporativo"},
-        {"Puesto": "🏅 4° Lugar", "Ganador": "Colaborador Ganador 4", "Premio": "Premio Sorpresa Corporativo"},
-        {"Puesto": "🏅 5° Lugar", "Ganador": "Colaborador Ganador 5", "Premio": "Premio Sorpresa Corporativo"},
+        {"Puesto": "🥇 1° Lugar", "Ganador": "Goyochea Axel Samuel", "Legajo": "637", "Puntos": "141 pts"},
+        {"Puesto": "🥈 2° Lugar", "Ganador": "Guerrero Lautaro", "Legajo": "664", "Puntos": "138 pts"},
+        {"Puesto": "🥉 3° Lugar", "Ganador": "Agustín rojas", "Legajo": "600", "Puntos": "138 pts"},
+        {"Puesto": "🏅 4° Lugar", "Ganador": "Federico Lyons", "Legajo": "632", "Puntos": "132 pts"},
+        {"Puesto": "🏅 5° Lugar", "Ganador": "JUAN CAZON", "Legajo": "9050", "Puntos": "132 pts"},
     ])
     st.table(col_ganadores)
     
