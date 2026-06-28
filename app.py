@@ -9,11 +9,11 @@ import plotly.express as px
 # =========================================================
 # ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
 # =========================================================
-# Cambiar a True para cerrar las jugadas / False para abrir la carga
-PRONOSTICOS_BLOQUEADOS = True 
+# False para abrir la carga de los 16avos / True para cerrar
+PRONOSTICOS_BLOQUEADOS = False 
 
 # 1. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(page_title="Prode Exincor 2026", page_icon="🏆", layout="wide")
+st.set_page_config(page_title="Prode Exincor 2026 - 16avos", page_icon="🏆", layout="wide")
 
 # --- CONFIGURACIÓN DE BANNER SUPERIOR DESDE GITHUB ---
 usuario_github = "rebecaesthervera"
@@ -70,60 +70,40 @@ def conectar_sheet():
         client = gspread.authorize(creds)
         ID_PLANILLA = "1lrC5SJmWmpN5KIVRAlYbQk7AXVsb7NK0bZwMKQ4rU_E"
         spreadsheet = client.open_by_key(ID_PLANILLA)
-        return spreadsheet.get_worksheet(0)
+        # Apunta a la segunda pestaña (índice 1), llamada "16avos"
+        return spreadsheet.get_worksheet(1)
     except Exception as e:
         return None
 
-# 2. DATOS DEL MUNDIAL
-grupos = {
-    "Grupo A": ["México", "Sudáfrica", "Corea del Sur", "Rep. Checa"],
-    "Grupo B": ["Canadá", "Bosnia", "Qatar", "Suiza"],
-    "Grupo C": ["Brasil", "Marruecos", "Haití", "Escocia"],
-    "Grupo D": ["EE. UU.", "Turquía", "Australia", "Paraguay"],
-    "Grupo E": ["Alemania", "Curazao", "C. Marfil", "Ecuador"],
-    "Grupo F": ["P. Bajos", "Japón", "Suecia", "Túnez"],
-    "Grupo G": ["Bélgica", "Egipto", "Irán", "N. Zelanda"],
-    "Grupo H": ["España", "C. Verde", "Arabia S.", "Uruguay"],
-    "Grupo I": ["Francia", "Senegal", "Irak", "Noruega"],
-    "Grupo J": ["Austria", "Jordania", "Argentina", "Argelia"],
-    "Grupo K": ["Portugal", "RD Congo", "Uzbekistán", "Colombia"],
-    "Grupo L": ["Inglaterra", "Croacia", "Ghana", "Panamá"]
-}
+# =========================================================
+# ⚽ 2. CONFIGURACIÓN DE LOS 8 PARTIDOS DE 16AVOS
+# =========================================================
+# IMPORTANTE: Cambiá "Clasificado X" por los países reales que juegan.
+partidos_16avos = [
+    {"id": "P1", "loc": "Clasificado A1", "sigla_l": "A1", "vis": "Clasificado B2", "sigla_v": "B2"},
+    {"id": "P2", "loc": "Clasificado C1", "sigla_l": "C1", "vis": "Clasificado D2", "sigla_v": "D2"},
+    {"id": "P3", "loc": "Clasificado E1", "sigla_l": "E1", "vis": "Clasificado F2", "sigla_v": "F2"},
+    {"id": "P4", "loc": "Clasificado G1", "sigla_l": "G1", "vis": "Clasificado H2", "sigla_v": "H2"},
+    {"id": "P5", "loc": "Clasificado B1", "sigla_l": "B1", "vis": "Clasificado A2", "sigla_v": "A2"},
+    {"id": "P6", "loc": "Clasificado D1", "sigla_l": "D1", "vis": "Clasificado C2", "sigla_v": "C2"},
+    {"id": "P7", "loc": "Clasificado F1", "sigla_l": "F1", "vis": "Clasificado E2", "sigla_v": "E2"},
+    {"id": "P8", "loc": "Clasificado H1", "sigla_l": "H1", "vis": "Clasificado G2", "sigla_v": "G2"},
+]
 
-siglas = {
-    "México": "MEX", "Sudáfrica": "RSA", "Corea del Sur": "KOR", "Rep. Checa": "CZE",
-    "Canadá": "CAN", "Bosnia": "BIH", "Qatar": "QAT", "Suiza": "SUI",
-    "Brasil": "BRA", "Marruecos": "MAR", "Haití": "HAI", "Escocia": "SCO",
-    "EE. UU.": "USA", "Turquía": "TUR", "Australia": "AUS", "Paraguay": "PAR",
-    "Alemania": "GER", "Curazao": "CUW", "C. Marfil": "CIV", "Ecuador": "ECU",
-    "P. Bajos": "NED", "Japón": "JPN", "Suecia": "SWE", "Túnez": "TUN",
-    "Bélgica": "BEL", "Egipto": "EGY", "Irán": "IRN", "N. Zelanda": "NZL",
-    "España": "ESP", "C. Verde": "CPV", "Arabia S.": "KSA", "Uruguay": "URU",
-    "Francia": "FRA", "Senegal": "SEN", "Irak": "IRQ", "Noruega": "NOR",
-    "Austria": "AUT", "Jordania": "JOR", "Argentina": "ARG", "Argelia": "ALG",
-    "Portugal": "POR", "RD Congo": "COD", "Uzbekistán": "UZB", "Colombia": "COL",
-    "Inglaterra": "ENG", "Croacia": "CRO", "Ghana": "GHA", "Panamá": "PAN"
-}
-
-def generar_partidos(equipos):
-    return [(equipos[0], equipos[1]), (equipos[2], equipos[3]),
-            (equipos[0], equipos[2]), (equipos[1], equipos[3]),
-            (equipos[0], equipos[3]), (equipos[1], equipos[2])]
-
-# PESTAÑAS PRINCIPALES
+# PESTAÑAS PRINCIPALES DEL SISTEMA
 tab_voto, tab_ranking, tab_stats, tab_politicas = st.tabs([
-    "⚽ Cargar Pronósticos", 
+    "⚽ Cargar Pronósticos (16avos)", 
     "📊 Tabla de Posiciones", 
     "📈 Tendencias", 
-    "📋 Reglamento y Políticas"
+    "📋 Reglamento y Cuadro de Honor"
 ])
 
+# --- 1. PESTAÑA DE CARGA ---
 with tab_voto:
     espacio_izq, col_central, espacio_der = st.columns([1, 2.8, 1])
     with col_central:
-        # Cartel de Alerta si el Prode está cerrado
         if PRONOSTICOS_BLOQUEADOS:
-            st.warning("⚠️ **La carga y modificación de pronósticos se encuentra CERRADA temporalmente.** Los partidos ya están definidos o en juego. Podés revisar el fixture abajo en modo lectura.")
+            st.warning("⚠️ **La carga de pronósticos para 16avos se encuentra CERRADA.**")
 
         st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 15px;'><h3 style='color: white; margin: 0; font-size: 18px;'>👤 1. Tus Datos Personales</h3></div>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
@@ -131,94 +111,70 @@ with tab_voto:
         with c2: legajo = st.text_input("Legajo", placeholder="Tu número de legajo", disabled=PRONOSTICOS_BLOQUEADOS)
         
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Completá los Partidos</h3></div>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Hacé clic en cada pestaña (Grupo A al L) y elegí tu opción. No olvides ninguna.</p>", unsafe_allow_html=True)
-        
-        n_grupos = list(grupos.keys())
-        tabs_grupos = st.tabs(n_grupos)
+        st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos para la Fase Eliminatoria</h3></div>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Seleccioná tus predicciones. Recordá que los puntos comienzan desde cero para esta nueva etapa.</p>", unsafe_allow_html=True)
         
         if "votos" not in st.session_state:
             st.session_state.votos = {}
 
-        for i, (n_grupo, equipos) in enumerate(grupos.items()):
-            with tabs_grupos[i]:
-                st.markdown(f"<h3 style='color: #1E3A8A; margin-top: 10px;'>🏆 {n_grupo}</h3>", unsafe_allow_html=True)
-                partidos = generar_partidos(equipos)
+        for idx, partido in enumerate(partidos_16avos):
+            loc, vis = partido["loc"], partido["vis"]
+            s_L, s_V = partido["sigla_l"], partido["sigla_v"]
+            clave = f"16avos_{partido['id']}"
+            
+            with st.container(border=True):
+                st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {idx+1}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
+                opciones = ["Sin seleccionar", f"[{s_L}] Gana {loc}", "🤝 Empate (90 min + Alargue)", f"[{s_V}] Gana {vis}"]
                 
-                for j, partido in enumerate(partidos):
-                    loc, vis = partido[0], partido[1]
-                    s_L, s_V = siglas.get(loc, "---"), siglas.get(vis, "---")
-                    
-                    with st.container(border=True):
-                        st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {j+1}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
-                        clave = f"{n_grupo}_Match_{j}"
-                        opciones = ["Sin seleccionar", f"[{s_L}] Gana {loc}", "🤝 Empate", f"[{s_V}] Gana {vis}"]
-                        
-                        default_idx = opciones.index(st.session_state.votos[clave]) if clave in st.session_state.votos else 0
-                        
-                        seleccion = st.radio(
-                            label=f"Opciones_{clave}",
-                            options=opciones,
-                            index=default_idx,
-                            horizontal=True,
-                            label_visibility="collapsed",
-                            key=f"radio_{clave}",
-                            disabled=PRONOSTICOS_BLOQUEADOS
-                        )
-                        st.session_state.votos[clave] = seleccion
+                default_idx = opciones.index(st.session_state.votos[clave]) if clave in st.session_state.votos else 0
+                
+                seleccion = st.radio(
+                    label=f"Opciones_{clave}",
+                    options=opciones,
+                    index=default_idx,
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key=f"radio_{clave}",
+                    disabled=PRONOSTICOS_BLOQUEADOS
+                )
+                st.session_state.votos[clave] = seleccion
 
         st.markdown("---")
         
-        # Botón dinámico según bloqueo
         if not PRONOSTICOS_BLOQUEADOS:
-            enviado = st.button("🚀 ENVIAR MI PRODE COMPLETO", use_container_width=True, type="primary")
+            enviado = st.button("🚀 ENVIAR PRONÓSTICOS DE 16AVOS", use_container_width=True, type="primary")
 
             if enviado:
                 if nombre.strip() == "" or legajo.strip() == "":
-                    st.error("🚫 Error: Por favor, ingresá tu Nombre y tu Legajo en la parte superior.")
+                    st.error("🚫 Error: Por favor, ingresá tu Nombre y tu Legajo.")
                 else:
-                    incompletos = []
-                    for n_g in n_grupos:
-                        for j in range(6):
-                            c_key = f"{n_g}_Match_{j}"
-                            if c_key not in st.session_state.votos or st.session_state.votos[c_key] == "Sin seleccionar":
-                                incompletos.append(n_g)
-                                break
+                    incompletos = False
+                    for partido in partidos_16avos:
+                        if st.session_state.votos.get(f"16avos_{partido['id']}", "Sin seleccionar") == "Sin seleccionar":
+                            incompletos = True
+                            break
                     
                     if incompletos:
-                        incompletos_unicos = list(set(incompletos))
-                        incompletos_unicos.sort()
-                        grupos_texto = ", ".join(incompletos_unicos)
-                        st.error(f"⚠️ ¡No podés enviar el Prode todavía! Te faltan completar partidos en: **{grupos_texto}**.")
+                        st.error("⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada.")
                     else:
-                        with st.spinner("Conectando con el servidor Exincor..."):
+                        with st.spinner("Guardando en el servidor Exincor..."):
                             hoja = conectar_sheet()
                             if hoja:
-                                datos_completos = hoja.get_all_records()
-                                df_check = pd.DataFrame(datos_completos)
-                                ya_existe = False
-                                if not df_check.empty and 'Legajo' in df_check.columns:
-                                    if str(legajo).strip() in df_check['Legajo'].astype(str).values:
-                                        ya_existe = True
+                                nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
+                                for partido in partidos_16avos:
+                                    nueva_fila.append(st.session_state.votos[f"16avos_{partido['id']}"])
                                 
-                                if ya_existe:
-                                    st.error(f"🚫 Acceso denegado: El legajo {legajo} ya registró sus pronósticos.")
-                                else:
-                                    nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
-                                    for n_g in n_grupos:
-                                        for j in range(6):
-                                            nueva_fila.append(st.session_state.votos[f"{n_g}_Match_{j}"])
-                                    try:
-                                        hoja.append_row(nueva_fila)
-                                        st.balloons()
-                                        st.success("✅ ¡Excelente! Tus pronósticos se guardaron de forma segura en Exincor. ¡Mucha suerte!")
-                                        st.session_state.votos = {}
-                                    except Exception as e:
-                                        st.error(f"Error técnico al escribir en la planilla: {e}")
+                                try:
+                                    hoja.append_row(nueva_fila)
+                                    st.balloons()
+                                    st.success("✅ ¡Pronósticos de 16avos guardados con éxito! ¡Comenzamos la carrera de cero!")
+                                    st.session_state.votos = {}
+                                except Exception as e:
+                                    st.error(f"Error al escribir en la planilla: {e}")
         else:
             st.info("🔒 El envío de formularios está deshabilitado temporalmente.")
 
-# DESCARGA DE DATOS PARA VISUALIZACIÓN
+# --- DESCARGA DE DATOS PARA RANKING (DESDE LA NUEVA PESTAÑA) ---
 try:
     hoja = conectar_sheet()
     datos = hoja.get_all_records()
@@ -226,7 +182,7 @@ try:
 except:
     df_prode = pd.DataFrame()
 
-# PESTAÑA RANKING UNIFICADA CON HIGHLIGHT EN EL TOP 5
+# --- 2. PESTAÑA DE RANKING (DESDE CERO) ---
 with tab_ranking:
     if not df_prode.empty:
         mascara_oficial = df_prode['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
@@ -234,6 +190,7 @@ with tab_ranking:
             resultados_reales = df_prode[mascara_oficial].iloc[0]
             df_jugadores = df_prode[~mascara_oficial]
             ranking = []
+            
             for _, fila in df_jugadores.iterrows():
                 puntos = 0
                 for col in df_prode.columns[3:]:
@@ -242,70 +199,73 @@ with tab_ranking:
                 ranking.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
             
             if ranking:
-                # 1. Armamos la tabla con todos los participantes ordenada de mayor a menor puntaje
                 df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
-                
-                # 2. Reindexamos para fijar los puestos del 1 en adelante
                 df_rank.index = range(1, len(df_rank) + 1)
                 df_rank.index.name = "Puesto"
                 df_rank = df_rank.reset_index()
 
-                st.markdown("<h3 style='color: #1E3A8A; text-align: center; margin-bottom: 5px;'>🏆 Tabla General de Posiciones Exincor</h3>", unsafe_allow_html=True)
-                st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Destacados en color los 5 puestos líderes con acceso a Premios Sorpresa Corporativos de Primera Ronda.</p>", unsafe_allow_html=True)
+                st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>🏆 Tabla de Posiciones - Fase Eliminatoria</h3>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Destacados en color los 3 puestos líderes que compiten por los Grandes Premios Finales.</p>", unsafe_allow_html=True)
                 
-                # 3. Función para sombrear las filas que se encuentren en el Top 5
-                def destacar_top5(row):
-                    if row['Puesto'] <= 5:
+                # Función para sombrear a los 3 primeros líderes
+                def destacar_top3(row):
+                    if row['Puesto'] <= 3:
                         return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
                     return [''] * len(row)
                 
-                df_estilizado = df_rank.style.apply(destacar_top5, axis=1)
-                
-                # 4. Mostramos una sola tabla interactiva con toda la dotación
-                st.dataframe(
-                    df_estilizado, 
-                    use_container_width=True, 
-                    hide_index=True
-                )
+                df_estilizado = df_rank.style.apply(destacar_top3, axis=1)
+                st.dataframe(df_estilizado, use_container_width=True, hide_index=True)
         else:
-            st.info("💡 El ranking se activará cuando cargues la fila 'RESULTADOS OFICIALES' en la planilla.")
+            st.info("💡 El ranking de esta fase se activará cuando se cargue la fila de 'RESULTADOS OFICIALES' en la pestaña '16avos'.")
     else:
-        st.info("Aún no hay datos cargados.")
+        st.info("Aún no hay predicciones cargadas para esta fase.")
 
+# --- 3. PESTAÑA DE TENDENCIAS ---
 with tab_stats:
     if not df_prode.empty:
         df_solo_votos = df_prode[~df_prode['Apellido y Nombre'].str.contains("RESULTADOS", na=False)]
-        if not df_solo_votos.empty:
-            st.subheader("¿En quién confía Exincor?")
+        if not df_solo_votos.empty and len(df_prode.columns) > 3:
+            st.subheader("¿Cómo están distribuidas las apuestas en Exincor?")
             todos_votos = df_solo_votos.melt(id_vars=['Apellido y Nombre'], value_vars=df_prode.columns[3:])
             votos_ganadores = todos_votos[~todos_votos['value'].str.contains("Empate")].copy()
-            votos_ganadores['Equipo'] = votos_ganadores['value'].str.split(" Gana ").str[-1]
-            favs = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
-            fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top 10 Favoritos", color_discrete_sequence=['#1E3A8A'])
-            st.plotly_chart(fig, use_container_width=True)
+            if not votos_ganadores.empty:
+                votos_ganadores['Equipo'] = votos_ganadores['value'].str.split(" Gana ").str[-1]
+                favs = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
+                fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top Favoritos de la Fase", color_discrete_sequence=['#1E3A8A'])
+                st.plotly_chart(fig, use_container_width=True)
 
-# 📋 REGLAMENTO OFICIAL
+# --- 4. PESTAÑA DE REGLAMENTO Y CUADRO DE HONOR ---
 with tab_politicas:
-    st.markdown("<h2 style='color: #1E3A8A;'>📜 Reglamento Oficial y Políticas del Prode Exincor 2026</h2>", unsafe_allow_html=True)
+    # CUADRO DE HONOR EXCLUSIVO DE LA 1RA RONDA
+    st.markdown("""
+    <div style='background-color: #1E3A8A; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 25px;'>
+        <h2 style='color: white; margin: 0;'>🎖️ CUADRO DE HONOR - GANADORES 1RA RONDA 🎖️</h2>
+        <p style='color: #D0E1F9; margin: 5px 0 0 0; font-size: 16px;'>Felicitaciones al Top 5 que conquistó la Fase de Grupos</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Tabla visual estática para recordar a los ganadores previos
+    col_ganadores = pd.DataFrame([
+        {"Puesto": "🥇 1° Lugar", "Ganador": "Colaborador Ganador 1", "Premio": "Premio Sorpresa Corporativo"},
+        {"Puesto": "🥈 2° Lugar", "Ganador": "Colaborador Ganador 2", "Premio": "Premio Sorpresa Corporativo"},
+        {"Puesto": "🥉 3° Lugar", "Ganador": "Colaborador Ganador 3", "Premio": "Premio Sorpresa Corporativo"},
+        {"Puesto": "🏅 4° Lugar", "Ganador": "Colaborador Ganador 4", "Premio": "Premio Sorpresa Corporativo"},
+        {"Puesto": "🏅 5° Lugar", "Ganador": "Colaborador Ganador 5", "Premio": "Premio Sorpresa Corporativo"},
+    ])
+    st.table(col_ganadores)
+    
     st.markdown("---")
     st.markdown("""
-    ### 👤 1. Políticas de Participación
-    * **Límite de registro:** Se permite estrictamente **una (1) sola carga por empleado (Legajo)**. El sistema bloqueará de forma automática cualquier intento de duplicación.
-    * **Modificaciones:** Una vez enviado el formulario, las predicciones son de carácter **irrevocable**. Cualquier error deberá notificarse internamente a Recursos Humanos antes del inicio del torneo.
-    * **Cierre de carga:** La plataforma cerrará la recepción de pronósticos exactamente **5 minutos antes** del pitazo inicial del primer partido del Mundial.
+    ### 🔄 ¡Borrón y Cuenta Nueva!
+    Para mantener la emoción en toda la planta y garantizar que **todos los colaboradores sigan participando con chances reales**, el puntaje se ha reiniciado completamente a **0 puntos**. 
     
-    ### 🔢 2. Sistema de Puntuación y Fases
-    * **Acierto completo (+3 Puntos):** Sumás 3 puntos si acertás al ganador exacto del partido o si pronosticás un empate y el partido termina igualado.
-    * **Puntos Acumulativos:** Los puntos obtenidos durante la Fase de Grupos **se mantendrán y se seguirán acumulando** en la tabla general durante las fases eliminatorias (Octavos, Cuartos, Semifinal y Final). Cada acierto en las rondas finales seguirá valiendo 3 puntos.
+    ### 📋 Reglamento y Políticas de la Fase Eliminatoria
+    * **Límite de registro:** Estrictamente **una (1) sola carga por Legajo** para toda la fase de 16avos.
+    * **Regla de Oro (90 Minutos):** Cuenta el resultado al finalizar el tiempo reglamentario o prórroga de alargue. Si el partido va a definición por penales, el resultado válido para el Prode es **🤝 Empate**.
     
-    ### ⚽ 3. Regla de Oro para Fases Eliminatorias (Octavos en adelante)
-    * **Resultado Válido:** Para el cálculo de puntos del Prode, el resultado que se toma como oficial es el obtenido **al finalizar los 90 minutos de juego reglamentarios (o prórroga de alargue si la hubiese)**.
-    * **¿Qué pasa con los penales?:** La tanda de penales **no se contabiliza** para el Prode. Si un partido se define en penales, significa que el partido terminó empatado, por lo tanto, el resultado oficial para el sistema será **🤝 Empate**.
-    
-    ### 🎁 4. Estructura Oficial de Grandes Premios
-    * **Premios de Primera Ronda (Fase de Grupos):** Al congelarse la tabla provisional al término de la primera fase, se entregarán **5 Grandes Premios Sorpresa Corporativos** a los colaboradores que logren consolidarse en los primeros 5 puestos del ranking general. ¡Preparate, es un reconocimiento que todo fanático va a querer tener!
-    * **Grandes Premios Finales (El Podio Definitivo del Mundial):** Los puntos acumulados continuarán sumándose en las fases eliminatorias hasta el último segundo del torneo. Al concluir la final del Mundial, el podio definitivo se consagrará con importantes premios económicos:
-        * 🥇 **1° Puesto General:** Importante **Orden de Compra Corporativa**.
-        * 🥈 **2° Puesto General:** Importante **Orden de Compra Corporativa**.
-        * 🥉 **3° Puesto General:** Importante **Orden de Compra Corporativa**.
+    ### 🎁 Nueva Estructura de Premios Finales
+    Al finalizar el certamen, el podio definitivo se consagrará únicamente con los **3 primeros puestos generales** de la fase acumulativa eliminatoria:
+    * 🥇 **1° Puesto General:** Importante Orden de Compra Corporativa.
+    * 🥈 **2° Puesto General:** Importante Orden de Compra Corporativa.
+    * 🥉 **3° Puesto General:** Importante Orden de Compra Corporativa.
     """)
