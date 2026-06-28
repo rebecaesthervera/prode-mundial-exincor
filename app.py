@@ -178,6 +178,10 @@ try:
     hoja = conectar_sheet()
     datos = hoja.get_all_records()
     df_prode = pd.DataFrame(datos)
+    
+    # SOLUCIÓN AL KEYERROR: Limpia automáticamente espacios fantasmas al inicio o final de los encabezados del Sheet
+    if not df_prode.empty:
+        df_prode.columns = df_prode.columns.str.strip()
 except:
     df_prode = pd.DataFrame()
 
