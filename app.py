@@ -9,8 +9,8 @@ import plotly.express as px
 # =========================================================
 # ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
 # =========================================================
-# SE CAMBIA A TRUE PARA BLOQUEAR DEFINITIVAMENTE LA CARGA
-PRONOSTICOS_BLOQUEADOS = True 
+# False para dejar la carga ABIERTA y permitir completar los 16 partidos
+PRONOSTICOS_BLOQUEADOS = False 
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026 - 16avos", page_icon="🏆", layout="wide")
@@ -70,7 +70,6 @@ def conectar_sheet(num_pestana):
         client = gspread.authorize(creds)
         ID_PLANILLA = "1lrC5SJmWmpN5KIVRAlYbQk7AXVsb7NK0bZwMKQ4rU_E"
         spreadsheet = client.open_by_key(ID_PLANILLA)
-        # Retorna la pestaña solicitada dinámicamente
         return spreadsheet.get_worksheet(num_pestana)
     except Exception as e:
         return None
@@ -78,8 +77,8 @@ def conectar_sheet(num_pestana):
 # =========================================================
 # ⚽ 2. CONFIGURACIÓN DE LOS PARTIDOS DE 16AVOS (COMPLETO)
 # =========================================================
-# Se incluyen los 16 partidos que conforman los dieciseisavos de final
 partidos_16avos = [
+    # --- Tus 8 columnas actuales en Excel (No se toca el orden para cuidar tus datos existentes) ---
     {"id": "P1", "loc": "Sudáfrica", "sigla_l": "RSA", "vis": "Canadá", "sigla_v": "CAN"},
     {"id": "P2", "loc": "Brasil", "sigla_l": "BRA", "vis": "Japón", "sigla_v": "JPN"},
     {"id": "P3", "loc": "Alemania", "sigla_l": "GER", "vis": "Paraguay", "sigla_v": "PAR"},
@@ -87,14 +86,16 @@ partidos_16avos = [
     {"id": "P5", "loc": "Costa de Marfil", "sigla_l": "CIV", "vis": "Noruega", "sigla_v": "NOR"},
     {"id": "P6", "loc": "Francia", "sigla_l": "FRA", "vis": "Suecia", "sigla_v": "SWE"},
     {"id": "P7", "loc": "México", "sigla_l": "MEX", "vis": "Ecuador", "sigla_v": "ECU"},
-    {"id": "P8", "loc": "Inglaterra", "sigla_l": "ENG", "vis": "RD Congo", "sigla_v": "COD"},
-    {"id": "P9", "loc": "Bélgica", "sigla_l": "BEL", "vis": "Senegal", "sigla_v": "SEN"},
-    {"id": "P10", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bosnia y Herzegovina", "sigla_v": "BIH"},
-    {"id": "P11", "loc": "España", "sigla_l": "ESP", "vis": "Austria", "sigla_v": "AUT"},
-    {"id": "P12", "loc": "Portugal", "sigla_l": "POR", "vis": "Croacia", "sigla_v": "CRO"},
-    {"id": "P13", "loc": "Suiza", "sigla_l": "SUI", "vis": "Argelia", "sigla_v": "ALG"},
-    {"id": "P14", "loc": "Australia", "sigla_l": "AUS", "vis": "Egipto", "sigla_v": "EGY"},
-    {"id": "P15", "loc": "Argentina", "sigla_l": "ARG", "vis": "Cabo Verde", "sigla_v": "CPV"},
+    {"id": "P8", "loc": "Argentina", "sigla_l": "ARG", "vis": "Cabo Verde", "sigla_v": "CPV"},
+    
+    # --- Partidos Nuevos que se agregarán a partir de la columna L (Los 8 que faltaban) ---
+    {"id": "P9", "loc": "Inglaterra", "sigla_l": "ENG", "vis": "RD Congo", "sigla_v": "COD"},
+    {"id": "P10", "loc": "Bélgica", "sigla_l": "BEL", "vis": "Senegal", "sigla_v": "SEN"},
+    {"id": "P11", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bosnia y Herzegovina", "sigla_v": "BIH"},
+    {"id": "P12", "loc": "España", "sigla_l": "ESP", "vis": "Austria", "sigla_v": "AUT"},
+    {"id": "P13", "loc": "Portugal", "sigla_l": "POR", "vis": "Croacia", "sigla_v": "CRO"},
+    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Argelia", "sigla_v": "ALG"},
+    {"id": "P15", "loc": "Australia", "sigla_l": "AUS", "vis": "Egipto", "sigla_v": "EGY"},
     {"id": "P16", "loc": "Colombia", "sigla_l": "COL", "vis": "Ghana", "sigla_v": "GHA"},
 ]
 
