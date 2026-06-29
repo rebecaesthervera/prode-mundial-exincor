@@ -9,8 +9,8 @@ import plotly.express as px
 # =========================================================
 # ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
 # =========================================================
-# False para abrir la carga de los 16avos / True para cerrar
-PRONOSTICOS_BLOQUEADOS = False 
+# SE CAMBIA A TRUE PARA BLOQUEAR DEFINITIVAMENTE LA CARGA
+PRONOSTICOS_BLOQUEADOS = True 
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Prode Exincor 2026 - 16avos", page_icon="🏆", layout="wide")
@@ -76,8 +76,9 @@ def conectar_sheet(num_pestana):
         return None
 
 # =========================================================
-# ⚽ 2. CONFIGURACIÓN DE LOS PARTIDOS DE 16AVOS (REALES)
+# ⚽ 2. CONFIGURACIÓN DE LOS PARTIDOS DE 16AVOS (COMPLETO)
 # =========================================================
+# Se incluyen los 16 partidos que conforman los dieciseisavos de final
 partidos_16avos = [
     {"id": "P1", "loc": "Sudáfrica", "sigla_l": "RSA", "vis": "Canadá", "sigla_v": "CAN"},
     {"id": "P2", "loc": "Brasil", "sigla_l": "BRA", "vis": "Japón", "sigla_v": "JPN"},
@@ -86,10 +87,18 @@ partidos_16avos = [
     {"id": "P5", "loc": "Costa de Marfil", "sigla_l": "CIV", "vis": "Noruega", "sigla_v": "NOR"},
     {"id": "P6", "loc": "Francia", "sigla_l": "FRA", "vis": "Suecia", "sigla_v": "SWE"},
     {"id": "P7", "loc": "México", "sigla_l": "MEX", "vis": "Ecuador", "sigla_v": "ECU"},
-    {"id": "P8", "loc": "Argentina", "sigla_l": "ARG", "vis": "Cabo Verde", "sigla_v": "CPV"},
+    {"id": "P8", "loc": "Inglaterra", "sigla_l": "ENG", "vis": "RD Congo", "sigla_v": "COD"},
+    {"id": "P9", "loc": "Bélgica", "sigla_l": "BEL", "vis": "Senegal", "sigla_v": "SEN"},
+    {"id": "P10", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bosnia y Herzegovina", "sigla_v": "BIH"},
+    {"id": "P11", "loc": "España", "sigla_l": "ESP", "vis": "Austria", "sigla_v": "AUT"},
+    {"id": "P12", "loc": "Portugal", "sigla_l": "POR", "vis": "Croacia", "sigla_v": "CRO"},
+    {"id": "P13", "loc": "Suiza", "sigla_l": "SUI", "vis": "Argelia", "sigla_v": "ALG"},
+    {"id": "P14", "loc": "Australia", "sigla_l": "AUS", "vis": "Egipto", "sigla_v": "EGY"},
+    {"id": "P15", "loc": "Argentina", "sigla_l": "ARG", "vis": "Cabo Verde", "sigla_v": "CPV"},
+    {"id": "P16", "loc": "Colombia", "sigla_l": "COL", "vis": "Ghana", "sigla_v": "GHA"},
 ]
 
-# PESTAÑAS PRINCIPALES DEL SISTEMA (Añadida la pestaña histórica)
+# PESTAÑAS PRINCIPALES DEL SISTEMA
 tab_voto, tab_ranking, tab_antiguos, tab_stats, tab_politicas = st.tabs([
     "⚽ Cargar Pronósticos (16avos)", 
     "📊 Tabla de Posiciones", 
