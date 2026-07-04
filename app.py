@@ -9,7 +9,6 @@ import plotly.express as px
 # =========================================================
 # ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
 # =========================================================
-# Carga ABIERTA exclusivamente para la segunda tanda de partidos
 PRONOSTICOS_BLOQUEADOS = False 
 
 # 1. CONFIGURACIÓN DE PÁGINA
@@ -75,19 +74,18 @@ def conectar_sheet(num_pestana):
         return None
 
 # =========================================================
-# ⚽ 2. CONFIGURACIÓN EXCLUSIVA DE LOS 8 PARTIDOS FALTANTES
+# ⚽ 2. CONFIGURACIÓN DE LOS 8 PARTIDOS DEL FORMULARIO
 # =========================================================
-# Se cargan los partidos de Octavos de Final correspondientes a Domingo, Lunes y Martes
+# Coinciden con los títulos mostrados en tu interfaz (Partidos 9 al 16)
 partidos_16avos = [
-    {"id": "P9", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Domingo 5/7
-    {"id": "P10", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},       # Domingo 5/7
-    {"id": "P11", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},         # Lunes 6/7
-    {"id": "P12", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},  # Lunes 6/7
-    {"id": "P13", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},        # Martes 7/7
-    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},          # Martes 7/7
-    # Nota: Podés rellenar P15 y P16 con los cruces que sigan en tu fixture o dejarlos listos para la siguiente fase.
-    {"id": "P15", "loc": "Por Definir", "sigla_l": "TBD", "vis": "Por Definir", "sigla_v": "TBD"}, 
-    {"id": "P16", "loc": "Por Definir", "sigla_l": "TBD", "vis": "Por Definir", "sigla_v": "TBD"},
+    {"id": "P9", "loc": "Canadá", "sigla_l": "CAN", "vis": "Marruecos", "sigla_v": "MAR"},          # Columna L
+    {"id": "P10", "loc": "Paraguay", "sigla_l": "PAR", "vis": "Francia", "sigla_v": "FRA"},         # Columna M
+    {"id": "P11", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Columna N
+    {"id": "P12", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},        # Columna O
+    {"id": "P13", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},          # Columna P
+    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},         # Columna Q
+    {"id": "P15", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},       # Columna R
+    {"id": "P16", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"}, # Columna S -> ¡Acá debés agregar columnas T, U, V... en el Sheet!
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
@@ -124,7 +122,6 @@ with tab_voto:
             clave = f"16avos_{partido['id']}"
             
             with st.container(border=True):
-                # Muestra el número correlativo real del fixture (Partido 9 al 16)
                 st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {idx+9}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
                 opciones = ["Sin seleccionar", f"[{s_L}] Gana {loc}", "🤝 Empate (90 min + Alargue)", f"[{s_V}] Gana {vis}"]
                 
@@ -160,15 +157,17 @@ with tab_voto:
                         st.error("⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada.")
                     else:
                         with st.spinner("Guardando en el servidor Exincor..."):
-                            hoja = conectar_sheet(1) # Escribe en la pestaña de 16avos (índice 1)
+                            hoja = conectar_sheet(1)
                             if hoja:
+                                # Estructura de columnas iniciales: [Timestamp, Apellido y Nombre, Legajo, ...]
                                 nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
                                 
-                                # Rellena con celdas vacías las primeras 8 columnas de partidos para no pisar el orden del Sheets
+                                # Rellenamos con celdas vacías las primeras 8 columnas de partidos anteriores de ser necesario
+                                # Esto asegura que el Partido 9 caiga exactamente en la Columna L, P13 en la P, etc.
                                 for _ in range(8):
                                     nueva_fila.append("")
                                     
-                                # Agrega las 8 nuevas respuestas seleccionadas
+                                # Agrega las 8 respuestas seleccionadas en orden secuencial
                                 for partido in partidos_16avos:
                                     nueva_fila.append(st.session_state.votos[f"16avos_{partido['id']}"])
                                 
@@ -178,11 +177,11 @@ with tab_voto:
                                     st.success("✅ ¡Tus pronósticos restantes fueron guardados con éxito!")
                                     st.session_state.votos = {}
                                 except Exception as e:
-                                    st.error(f"Error al escribir en la planilla: {e}")
+                                    st.error(f"Error al escribir en la planilla. Verificá si tu Google Sheet tiene columnas libres a la derecha de la S. Detalle: {e}")
         else:
             st.info("🔒 El envío de formularios está deshabilitado temporalmente.")
 
-# --- DESCARGA DE DATOS DESDE LA NUEVA PESTAÑA (16AVOS) ---
+# --- DESCARGA DE DATOS DESDE LA NUEVA PESTAÑA ---
 try:
     hoja_actual = conectar_sheet(1)
     datos_actual = hoja_actual.get_all_records()
@@ -192,7 +191,7 @@ try:
 except:
     df_prode = pd.DataFrame()
 
-# --- 2. PESTAÑA DE RANKING DE LA FASE ACTUAL ---
+# --- 2. PESTAÑA DE RANKING ---
 with tab_ranking:
     if not df_prode.empty:
         mascara_oficial = df_prode['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
@@ -216,85 +215,59 @@ with tab_ranking:
                 df_rank = df_rank.reset_index()
 
                 st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>🏆 Tabla de Posiciones - Fase Eliminatoria</h3>", unsafe_allow_html=True)
-                st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Destacados en color los 3 puestos líderes que compiten por los Grandes Premios Finales.</p>", unsafe_allow_html=True)
                 
                 def destacar_top3(row):
                     if row['Puesto'] <= 3:
                         return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
                     return [''] * len(row)
                 
-                df_estilizado = df_rank.style.apply(destacar_top3, axis=1)
-                st.dataframe(df_estilizado, use_container_width=True, hide_index=True)
+                st.dataframe(df_rank.style.apply(destacar_top3, axis=1), use_container_width=True, hide_index=True)
         else:
             st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📝 Colaboradores Registrados - 16avos</h3>", unsafe_allow_html=True)
-            st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>A continuación se muestran los empleados que ya guardaron con éxito sus apuestas de la fase.</p>", unsafe_allow_html=True)
-            
             if not df_jugadores.empty:
                 df_registrados = df_jugadores[["Apellido y Nombre", "Legajo"]].copy()
                 df_registrados.columns = ["Colaborador", "Legajo"]
                 df_registrados.insert(0, "Estado", "✅ Guardado")
                 df_registrados.index = range(1, len(df_registrados) + 1)
                 df_registrados.index.name = "N°"
-                df_registrados = df_registrados.reset_index()
-                
-                def estilo_registro(row):
-                    return ['background-color: #FFFFFF; color: #1E3A8A;'] * len(row)
-                
-                st.dataframe(df_registrados.style.apply(estilo_registro, axis=1), use_container_width=True, hide_index=True)
+                st.dataframe(df_registrados.reset_index(), use_container_width=True, hide_index=True)
             else:
-                st.info("💡 Aún no se registraron jugadas. ¡Sé el primero en enviar tus pronósticos!")
-    else:
-        st.info("Aún no hay predicciones cargadas para esta fase.")
+                st.info("💡 Aún no se registraron jugadas.")
 
-# --- 3. NUEVA PESTAÑA: RECUPERACIÓN EN VIVO DEL TOP 10 ANTERIOR ---
+# --- 3. HISTORIAL TOP 10 ---
 with tab_antiguos:
     st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📊 Top 10 Definitivo - Fase de Grupos</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Historial completo de los mejores puntajes acumulados durante la Primera Ronda del Prode.</p>", unsafe_allow_html=True)
-    
-    with st.spinner("Calculando tabla histórica desde la base de datos..."):
-        try:
-            hoja_vieja = conectar_sheet(0)
-            datos_viejos = hoja_vieja.get_all_records()
-            df_viejo = pd.DataFrame(datos_viejos)
+    try:
+        hoja_vieja = conectar_sheet(0)
+        datos_viejos = hoja_vieja.get_all_records()
+        df_viejo = pd.DataFrame(datos_viejos)
+        
+        if not df_viejo.empty:
+            df_viejo.columns = df_viejo.columns.str.strip()
+            mascara_oficial_viejos = df_viejo['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
             
-            if not df_viejo.empty:
-                df_viejo.columns = df_viejo.columns.str.strip()
-                mascara_oficial_viejos = df_viejo['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
+            if mascara_oficial_viejos.any():
+                resultados_reales_viejos = df_viejo[mascara_oficial_viejos].iloc[0]
+                df_jugadores_viejos = df_viejo[~mascara_oficial_viejos]
+                ranking_viejo = []
                 
-                if mascara_oficial_viejos.any():
-                    resultados_reales_viejos = df_viejo[mascara_oficial_viejos].iloc[0]
-                    df_jugadores_viejos = df_viejo[~mascara_oficial_viejos]
-                    ranking_viejo = []
-                    
-                    for _, fila in df_jugadores_viejos.iterrows():
-                        puntos = 0
-                        for col in df_viejo.columns[3:]:
-                            if col in resultados_reales_viejos and fila[col] == resultados_reales_viejos[col] and fila[col] != "":
-                                puntos += 3
-                        ranking_viejo.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
-                    
-                    if ranking_viejo:
-                        df_rank_viejo = pd.DataFrame(ranking_viejo).sort_values(by="Puntos", ascending=False)
-                        df_rank_viejo.index = range(1, len(df_rank_viejo) + 1)
-                        df_rank_viejo.index.name = "Puesto"
-                        df_rank_viejo = df_rank_viejo.reset_index()
-                        
-                        df_top10 = df_rank_viejo.head(10)
-                        
-                        def destacar_top5_viejo(row):
-                            if row['Puesto'] <= 5:
-                                return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
-                            return [''] * len(row)
-                        
-                        st.dataframe(df_top10.style.apply(destacar_top5_viejo, axis=1), use_container_width=True, hide_index=True)
-                else:
-                    st.warning("No se encontró la fila 'RESULTADOS OFICIALES' en la pestaña original de grupos.")
-            else:
-                st.info("No se encontraron registros en la pestaña original.")
-        except Exception as e:
-            st.error(f"No se pudo cargar el historial: {e}")
+                for _, fila in df_jugadores_viejos.iterrows():
+                    puntos = 0
+                    for col in df_viejo.columns[3:]:
+                        if col in resultados_reales_viejos and fila[col] == resultados_reales_viejos[col] and fila[col] != "":
+                            puntos += 3
+                    ranking_viejo.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
+                
+                if ranking_viejo:
+                    df_rank_viejo = pd.DataFrame(ranking_viejo).sort_values(by="Puntos", ascending=False)
+                    df_rank_viejo.index = range(1, len(df_rank_viejo) + 1)
+                    df_rank_viejo.index.name = "Puesto"
+                    df_top10 = df_rank_viejo.head(10).reset_index()
+                    st.dataframe(df_top10, use_container_width=True, hide_index=True)
+    except Exception as e:
+        st.error(f"No se pudo cargar el historial: {e}")
 
-# --- 4. PESTAÑA DE TENDENCIAS ---
+# --- 4. TENDENCIAS ---
 with tab_stats:
     if not df_prode.empty:
         df_solo_votos = df_prode[~df_prode['Apellido y Nombre'].str.contains("RESULTADOS", na=False)]
@@ -305,39 +278,19 @@ with tab_stats:
             if not votos_ganadores.empty:
                 votos_ganadores['Equipo'] = votos_ganadores['value'].str.split(" Gana ").str[-1]
                 favs = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
-                fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top Favoritos de la Fase", color_discrete_sequence=['#1E3A8A'])
+                fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top Favoritos", color_discrete_sequence=['#1E3A8A'])
                 st.plotly_chart(fig, use_container_width=True)
 
-# --- 5. PESTAÑA DE REGLAMENTO Y CUADRO DE HONOR ---
+# --- 5. REGLAMENTO ---
 with tab_politicas:
     st.markdown("""
     <div style='background-color: #1E3A8A; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 25px;'>
         <h2 style='color: white; margin: 0;'>🎖️ CUADRO DE HONOR - GANADORES 1RA RONDA 🎖️</h2>
-        <p style='color: #D0E1F9; margin: 5px 0 0 0; font-size: 16px;'>Felicitaciones al Top 5 que conquistó la Fase de Grupos</p>
     </div>
     """, unsafe_allow_html=True)
-    
     col_ganadores = pd.DataFrame([
         {"Puesto": "🥇 1° Lugar", "Ganador": "Goyochea Axel Samuel", "Legajo": "637", "Puntos": "141 pts"},
         {"Puesto": "🥈 2° Lugar", "Ganador": "Guerrero Lautaro", "Legajo": "664", "Puntos": "138 pts"},
         {"Puesto": "🥉 3° Lugar", "Ganador": "Agustín rojas", "Legajo": "600", "Puntos": "138 pts"},
-        {"Puesto": "🏅 4° Lugar", "Ganador": "Federico Lyons", "Legajo": "632", "Puntos": "132 pts"},
-        {"Puesto": "🏅 5° Lugar", "Ganador": "JUAN CAZON", "Legajo": "9050", "Puntos": "132 pts"},
     ])
     st.table(col_ganadores)
-    
-    st.markdown("---")
-    st.markdown("""
-    ### 🔄 ¡Borrón y Cuenta Nueva!
-    Para mantener la emoción en toda la planta y garantizar que **todos los colaboradores sigan participando con chances reales**, el puntaje se ha reiniciado completamente a **0 puntos** para esta fase eliminatoria. 
-    
-    ### 📋 Reglamento y Políticas de la Fase Eliminatoria
-    * **Límite de registro:** Estrictamente **una (1) sola carga por Legajo** para toda la fase de 16avos.
-    * **Regla de Oro (90 Minutos):** Cuenta el resultado al finalizar el tiempo reglamentario o prórroga de alargue. Si el partido va a definición por penales, el resultado válido para el Prode es **🤝 Empate**.
-    
-    ### 🎁 Nueva Estructura de Premios Finales
-    Al finalizar el certamen, el podio definitivo se consagrará únicamente con los **3 primeros puestos generales** de la fase acumulativa eliminatoria:
-    * 🥇 **1° Puesto General:** Importante Orden de Compra Corporativa.
-    * 🥈 **2° Puesto General:** Importante Orden de Compra Corporativa.
-    * 🥉 **3° Puesto General:** Importante Orden de Compra Corporativa.
-    """)
