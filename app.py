@@ -12,7 +12,7 @@ import plotly.express as px
 PRONOSTICOS_BLOQUEADOS = False 
 
 # 1. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(page_title="Prode Exincor 2026 - 16avos (Parte 2)", page_icon="🏆", layout="wide")
+st.set_page_config(page_title="Prode Exincor 2026 - Octavos de Final", page_icon="🏆", layout="wide")
 
 # --- CONFIGURACIÓN DE BANNER SUPERIOR DESDE GITHUB ---
 usuario_github = "rebecaesthervera"
@@ -74,23 +74,19 @@ def conectar_sheet(num_pestana):
         return None
 
 # =========================================================
-# ⚽ 2. CONFIGURACIÓN DE LOS 8 PARTIDOS DEL FORMULARIO
+# ⚽ 2. CONFIGURACIÓN EXCLUSIVA DE LOS 4 PARTIDOS DEFINIDOS
 # =========================================================
-# Coinciden con los títulos mostrados en tu interfaz (Partidos 9 al 16)
-partidos_16avos = [
-    {"id": "P9", "loc": "Canadá", "sigla_l": "CAN", "vis": "Marruecos", "sigla_v": "MAR"},          # Columna L
-    {"id": "P10", "loc": "Paraguay", "sigla_l": "PAR", "vis": "Francia", "sigla_v": "FRA"},         # Columna M
-    {"id": "P11", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Columna N
-    {"id": "P12", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},        # Columna O
-    {"id": "P13", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},          # Columna P
-    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},         # Columna Q
-    {"id": "P15", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},       # Columna R
-    {"id": "P16", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"}, # Columna S -> ¡Acá debés agregar columnas T, U, V... en el Sheet!
+# Ajustado exactamente a las columnas D, E, F y G de tu pestaña "8vos"
+partidos_8vos = [
+    {"id": "P1", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Columna D
+    {"id": "P2", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},       # Columna E
+    {"id": "P3", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},         # Columna F
+    {"id": "P4", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},  # Columna G
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
 tab_voto, tab_ranking, tab_antiguos, tab_stats, tab_politicas = st.tabs([
-    "⚽ Cargar Pronósticos (Parte 2)", 
+    "⚽ Cargar Pronósticos (Octavos)", 
     "📊 Tabla de Posiciones", 
     "🏅 Top 10 Primera Ronda",
     "📈 Tendencias", 
@@ -110,22 +106,22 @@ with tab_voto:
         with c2: legajo = st.text_input("Legajo", placeholder="Tu número de legajo", disabled=PRONOSTICOS_BLOQUEADOS)
         
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos Restantes</h3></div>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los 8 partidos que faltaban actualizar.</p>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de Octavos</h3></div>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los partidos definidos para esta fase.</p>", unsafe_allow_html=True)
         
-        if "votos" not in st.session_state:
-            st.session_state.votos = {}
+        if "votos_8vos" not in st.session_state:
+            st.session_state.votos_8vos = {}
 
-        for idx, partido in enumerate(partidos_16avos):
+        for idx, partido in enumerate(partidos_8vos):
             loc, vis = partido["loc"], partido["vis"]
             s_L, s_V = partido["sigla_l"], partido["sigla_v"]
-            clave = f"16avos_{partido['id']}"
+            clave = f"8vos_{partido['id']}"
             
             with st.container(border=True):
-                st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {idx+9}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {idx+1}: {loc} vs. {vis}</p>", unsafe_allow_html=True)
                 opciones = ["Sin seleccionar", f"[{s_L}] Gana {loc}", "🤝 Empate (90 min + Alargue)", f"[{s_V}] Gana {vis}"]
                 
-                default_idx = opciones.index(st.session_state.votos[clave]) if clave in st.session_state.votos else 0
+                default_idx = opciones.index(st.session_state.votos_8vos[clave]) if clave in st.session_state.votos_8vos else 0
                 
                 seleccion = st.radio(
                     label=f"Opciones_{clave}",
@@ -136,54 +132,47 @@ with tab_voto:
                     key=f"radio_{clave}",
                     disabled=PRONOSTICOS_BLOQUEADOS
                 )
-                st.session_state.votos[clave] = seleccion
+                st.session_state.votos_8vos[clave] = seleccion
 
         st.markdown("---")
         
         if not PRONOSTICOS_BLOQUEADOS:
-            enviado = st.button("🚀 ENVIAR PRONÓSTICOS RESTANTES", use_container_width=True, type="primary")
+            enviado = st.button("🚀 ENVIAR PRONÓSTICOS DE OCTAVOS", use_container_width=True, type="primary")
 
             if enviado:
                 if nombre.strip() == "" or legajo.strip() == "":
                     st.error("🚫 Error: Por favor, ingresá tu Nombre y tu Legajo.")
                 else:
                     incompletos = False
-                    for partido in partidos_16avos:
-                        if st.session_state.votos.get(f"16avos_{partido['id']}", "Sin seleccionar") == "Sin seleccionar":
+                    for partido in partidos_8vos:
+                        if st.session_state.votos_8vos.get(f"8vos_{partido['id']}", "Sin seleccionar") == "Sin seleccionar":
                             incompletos = True
                             break
                     
                     if incompletos:
                         st.error("⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada.")
                     else:
-                        with st.spinner("Guardando en el servidor Exincor..."):
-                            hoja = conectar_sheet(1)
+                        with st.spinner("Guardando en la pestaña 8vos de Exincor..."):
+                            hoja = conectar_sheet(2) # Apestaña índice 2 ("8vos")
                             if hoja:
-                                # Estructura de columnas iniciales: [Timestamp, Apellido y Nombre, Legajo, ...]
                                 nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
-                                
-                                # Rellenamos con celdas vacías las primeras 8 columnas de partidos anteriores de ser necesario
-                                # Esto asegura que el Partido 9 caiga exactamente en la Columna L, P13 en la P, etc.
-                                for _ in range(8):
-                                    nueva_fila.append("")
                                     
-                                # Agrega las 8 respuestas seleccionadas en orden secuencial
-                                for partido in partidos_16avos:
-                                    nueva_fila.append(st.session_state.votos[f"16avos_{partido['id']}"])
+                                for partido in partidos_8vos:
+                                    nueva_fila.append(st.session_state.votos_8vos[f"8vos_{partido['id']}"])
                                 
                                 try:
                                     hoja.append_row(nueva_fila)
                                     st.balloons()
-                                    st.success("✅ ¡Tus pronósticos restantes fueron guardados con éxito!")
-                                    st.session_state.votos = {}
+                                    st.success("✅ ¡Tus pronósticos de octavos fueron guardados con éxito!")
+                                    st.session_state.votos_8vos = {}
                                 except Exception as e:
-                                    st.error(f"Error al escribir en la planilla. Verificá si tu Google Sheet tiene columnas libres a la derecha de la S. Detalle: {e}")
+                                    st.error(f"Error al escribir en la planilla: {e}")
         else:
             st.info("🔒 El envío de formularios está deshabilitado temporalmente.")
 
-# --- DESCARGA DE DATOS DESDE LA NUEVA PESTAÑA ---
+# --- DESCARGA DE DATOS DESDE LA PESTAÑA "8VOS" ---
 try:
-    hoja_actual = conectar_sheet(1)
+    hoja_actual = conectar_sheet(2)
     datos_actual = hoja_actual.get_all_records()
     df_prode = pd.DataFrame(datos_actual)
     if not df_prode.empty:
@@ -214,7 +203,7 @@ with tab_ranking:
                 df_rank.index.name = "Puesto"
                 df_rank = df_rank.reset_index()
 
-                st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>🏆 Tabla de Posiciones - Fase Eliminatoria</h3>", unsafe_allow_html=True)
+                st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>🏆 Tabla de Posiciones - Octavos</h3>", unsafe_allow_html=True)
                 
                 def destacar_top3(row):
                     if row['Puesto'] <= 3:
@@ -223,7 +212,7 @@ with tab_ranking:
                 
                 st.dataframe(df_rank.style.apply(destacar_top3, axis=1), use_container_width=True, hide_index=True)
         else:
-            st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📝 Colaboradores Registrados - 16avos</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📝 Colaboradores Registrados - Octavos</h3>", unsafe_allow_html=True)
             if not df_jugadores.empty:
                 df_registrados = df_jugadores[["Apellido y Nombre", "Legajo"]].copy()
                 df_registrados.columns = ["Colaborador", "Legajo"]
@@ -234,7 +223,7 @@ with tab_ranking:
             else:
                 st.info("💡 Aún no se registraron jugadas.")
 
-# --- 3. HISTORIAL TOP 10 ---
+# --- 3. HISTORIAL TOP 10 (Pestaña Grupos - Índice 0) ---
 with tab_antiguos:
     st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📊 Top 10 Definitivo - Fase de Grupos</h3>", unsafe_allow_html=True)
     try:
@@ -272,7 +261,7 @@ with tab_stats:
     if not df_prode.empty:
         df_solo_votos = df_prode[~df_prode['Apellido y Nombre'].str.contains("RESULTADOS", na=False)]
         if not df_solo_votos.empty and len(df_prode.columns) > 3:
-            st.subheader("¿Cómo están distribuidas las apuestas en Exincor?")
+            st.subheader("¿Cómo están distribuidas las apuestas en Octavos?")
             todos_votos = df_solo_votos.melt(id_vars=['Apellido y Nombre'], value_vars=df_prode.columns[3:])
             votos_ganadores = todos_votos[~todos_votos['value'].str.contains("Empate")].copy()
             if not votos_ganadores.empty:
@@ -285,7 +274,7 @@ with tab_stats:
 with tab_politicas:
     st.markdown("""
     <div style='background-color: #1E3A8A; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 25px;'>
-        <h2 style='color: white; margin: 0;'>🎖️ CUADRO DE HONOR - GANADORES 1RA RONDA 🎖️</h2>
+        <h2 style='color: white; margin: 0;'>🎖️ CUADRO DE HONOR - GANADORES FASE DE GRUPOS 🎖️</h2>
     </div>
     """, unsafe_allow_html=True)
     col_ganadores = pd.DataFrame([
