@@ -191,6 +191,10 @@ try:
                 leg = str(fila["Legajo"]).strip()
                 puntos = 0
                 for col in df_16.columns[3:]:
+                    # 🚨 MODIFICACIÓN: Se ignora la columna "Partido 1" para evitar desajustes
+                    if col == "Partido 1":
+                        continue
+                        
                     if col in res_16 and fila[col] == res_16[col] and fila[col] != "":
                         puntos += 3
                 if leg:
@@ -218,6 +222,10 @@ try:
             # Si hay resultados cargados en 8vos, calcula los puntos correspondientes
             if res_oficial_8_existe:
                 for col in df_8.columns[3:]:
+                    # 🚨 MODIFICACIÓN: Ignoramos el Partido 1 en 8vos en caso de aplicar el mismo criterio
+                    if col == "Partido 1":
+                        continue
+                        
                     if col in res_8 and fila[col] == res_8[col] and fila[col] != "":
                         puntos_fase += 3
             
