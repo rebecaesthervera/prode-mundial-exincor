@@ -77,16 +77,16 @@ def conectar_sheet(num_pestana):
 # =========================================================
 # ⚽ 2. CONFIGURACIÓN EXCLUSIVA DE LOS 8 PARTIDOS FALTANTES
 # =========================================================
-# Solo figuran los partidos correspondientes a los IDs P9 hasta P16
+# Reordenados EXACTAMENTE según la estructura de tus columnas P, Q, R y S del Sheets
 partidos_16avos = [
-    {"id": "P9", "loc": "Inglaterra", "sigla_l": "ENG", "vis": "RD Congo", "sigla_v": "COD"},
-    {"id": "P10", "loc": "Bélgica", "sigla_l": "BEL", "vis": "Senegal", "sigla_v": "SEN"},
-    {"id": "P11", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bosnia y Herzegovina", "sigla_v": "BIH"},
-    {"id": "P12", "loc": "España", "sigla_l": "ESP", "vis": "Austria", "sigla_v": "AUT"},
-    {"id": "P13", "loc": "Portugal", "sigla_l": "POR", "vis": "Croacia", "sigla_v": "CRO"},
-    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Argelia", "sigla_v": "ALG"},
-    {"id": "P15", "loc": "Australia", "sigla_l": "AUS", "vis": "Egipto", "sigla_v": "EGY"},
-    {"id": "P16", "loc": "Colombia", "sigla_l": "COL", "vis": "Ghana", "sigla_v": "GHA"},
+    {"id": "P9", "loc": "Canadá", "sigla_l": "CAN", "vis": "Marruecos", "sigla_v": "MAR"},
+    {"id": "P10", "loc": "Paraguay", "sigla_l": "PAR", "vis": "Francia", "sigla_v": "FRA"},
+    {"id": "P11", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},
+    {"id": "P12", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},
+    {"id": "P13", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},            # Columna P
+    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},           # Columna Q
+    {"id": "P15", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},         # Columna R
+    {"id": "P16", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},   # Columna S
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
