@@ -77,16 +77,17 @@ def conectar_sheet(num_pestana):
 # =========================================================
 # ⚽ 2. CONFIGURACIÓN EXCLUSIVA DE LOS 8 PARTIDOS FALTANTES
 # =========================================================
-# Reordenados EXACTAMENTE según la estructura de tus columnas P, Q, R y S del Sheets
+# Se cargan los partidos de Octavos de Final correspondientes a Domingo, Lunes y Martes
 partidos_16avos = [
-    {"id": "P9", "loc": "Canadá", "sigla_l": "CAN", "vis": "Marruecos", "sigla_v": "MAR"},
-    {"id": "P10", "loc": "Paraguay", "sigla_l": "PAR", "vis": "Francia", "sigla_v": "FRA"},
-    {"id": "P11", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},
-    {"id": "P12", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},
-    {"id": "P13", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},            # Columna P
-    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},           # Columna Q
-    {"id": "P15", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},         # Columna R
-    {"id": "P16", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},   # Columna S
+    {"id": "P9", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Domingo 5/7
+    {"id": "P10", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},       # Domingo 5/7
+    {"id": "P11", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},         # Lunes 6/7
+    {"id": "P12", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},  # Lunes 6/7
+    {"id": "P13", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},        # Martes 7/7
+    {"id": "P14", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},          # Martes 7/7
+    # Nota: Podés rellenar P15 y P16 con los cruces que sigan en tu fixture o dejarlos listos para la siguiente fase.
+    {"id": "P15", "loc": "Por Definir", "sigla_l": "TBD", "vis": "Por Definir", "sigla_v": "TBD"}, 
+    {"id": "P16", "loc": "Por Definir", "sigla_l": "TBD", "vis": "Por Definir", "sigla_v": "TBD"},
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
