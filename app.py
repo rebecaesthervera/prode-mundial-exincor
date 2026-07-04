@@ -76,22 +76,21 @@ def conectar_sheet(num_pestana):
 # =========================================================
 # ⚽ 2. CRONOGRAMA COMPLETO DE OCTAVOS DE FINAL
 # =========================================================
-# Los 8 partidos distribuidos de corrido desde la columna D hasta la K
 partidos_8vos = [
-    {"id": "P1", "loc": "Canadá", "sigla_l": "CAN", "vis": "Marruecos", "sigla_v": "MAR"},          # Sábado 4/7  (Columna D)
-    {"id": "P2", "loc": "Paraguay", "sigla_l": "PAR", "vis": "Francia", "sigla_v": "FRA"},         # Sábado 4/7  (Columna E)
-    {"id": "P3", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Domingo 5/7 (Columna F)
-    {"id": "P4", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},        # Domingo 5/7 (Columna G)
-    {"id": "P5", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},          # Lunes 6/7   (Columna H)
-    {"id": "P6", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},   # Lunes 6/7   (Columna I)
-    {"id": "P7", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},         # Martes 7/7  (Columna J)
-    {"id": "P8", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},           # Martes 7/7  (Columna K)
+    {"id": "P1", "loc": "Canadá", "sigla_l": "CAN", "vis": "Marruecos", "sigla_v": "MAR"},
+    {"id": "P2", "loc": "Paraguay", "sigla_l": "PAR", "vis": "Francia", "sigla_v": "FRA"},
+    {"id": "P3", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},
+    {"id": "P4", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},
+    {"id": "P5", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},
+    {"id": "P6", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},
+    {"id": "P7", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},
+    {"id": "P8", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
 tab_voto, tab_ranking, tab_antiguos, tab_stats, tab_politicas = st.tabs([
     "⚽ Cargar Pronósticos (Octavos)", 
-    "📊 Tabla de Posiciones", 
+    "📊 Tabla de Posiciones Acumulada", 
     "🏅 Top 10 Primera Ronda",
     "📈 Tendencias", 
     "📋 Reglamento y Cuadro de Honor"
@@ -157,7 +156,7 @@ with tab_voto:
                         st.error("⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada.")
                     else:
                         with st.spinner("Guardando en la pestaña 8vos de Exincor..."):
-                            hoja = conectar_sheet(2) # Apestaña índice 2 ("8vos")
+                            hoja = conectar_sheet(2)
                             if hoja:
                                 nueva_fila = [datetime.now().strftime("%d/%m/%Y %H:%M:%S"), nombre.strip(), legajo.strip()]
                                     
@@ -174,67 +173,90 @@ with tab_voto:
         else:
             st.info("🔒 El envío de formularios está deshabilitado temporalmente.")
 
-# --- DESCARGA DE DATOS DESDE LA PESTAÑA "8VOS" ---
+# --- DESCARGA Y PROCESAMIENTO DE RANKING ACUMULADO ---
+dict_acumulado = {}
+
+# 1. Calcular puntos de la pestaña anterior (16avos - Índice 1)
 try:
-    hoja_actual = conectar_sheet(2)
-    datos_actual = hoja_actual.get_all_records()
-    df_prode = pd.DataFrame(datos_actual)
-    if not df_prode.empty:
-        df_prode.columns = df_prode.columns.str.strip()
-except:
-    df_prode = pd.DataFrame()
-
-# --- 2. PESTAÑA DE RANKING ---
-with tab_ranking:
-    if not df_prode.empty:
-        mascara_oficial = df_prode['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
-        df_jugadores = df_prode[~mascara_oficial]
+    hoja_16 = conectar_sheet(1)
+    df_16 = pd.DataFrame(hoja_16.get_all_records())
+    if not df_16.empty:
+        df_16.columns = df_16.columns.str.strip()
+        mascara_oficial_16 = df_16['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
+        df_jugadores_16 = df_16[~mascara_oficial_16]
         
-        if mascara_oficial.any():
-            resultados_reales = df_prode[mascara_oficial].iloc[0]
-            ranking = []
-            
-            for _, fila in df_jugadores.iterrows():
+        if mascara_oficial_16.any():
+            res_16 = df_16[mascara_oficial_16].iloc[0]
+            for _, fila in df_jugadores_16.iterrows():
+                leg = str(fila["Legajo"]).strip()
                 puntos = 0
-                for col in df_prode.columns[3:]:
-                    if col in resultados_reales and fila[col] == resultados_reales[col] and fila[col] != "":
+                for col in df_16.columns[3:]:
+                    if col in res_16 and fila[col] == res_16[col] and fila[col] != "":
                         puntos += 3
-                ranking.append({"Colaborador": fila["Apellido y Nombre"], "Legajo": fila["Legajo"], "Puntos": puntos})
+                if leg:
+                    dict_acumulado[leg] = {"Nombre": fila["Apellido y Nombre"], "Puntos": puntos}
+except:
+    pass
+
+# 2. Calcular y sumar puntos de la nueva pestaña (8vos - Índice 2)
+try:
+    hoja_8 = conectar_sheet(2)
+    df_8 = pd.DataFrame(hoja_8.get_all_records())
+    if not df_8.empty:
+        df_8.columns = df_8.columns.str.strip()
+        mascara_oficial_8 = df_8['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
+        df_jugadores_8 = df_8[~mascara_oficial_8]
+        
+        res_oficial_8_existe = mascara_oficial_8.any()
+        if res_oficial_8_existe:
+            res_8 = df_8[mascara_oficial_8].iloc[0]
             
-            if ranking:
-                df_rank = pd.DataFrame(ranking).sort_values(by="Puntos", ascending=False)
-                df_rank.index = range(1, len(df_rank) + 1)
-                df_rank.index.name = "Puesto"
-                df_rank = df_rank.reset_index()
-
-                st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>🏆 Tabla de Posiciones - Octavos</h3>", unsafe_allow_html=True)
-                
-                def destacar_top3(row):
-                    if row['Puesto'] <= 3:
-                        return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
-                    return [''] * len(row)
-                
-                st.dataframe(df_rank.style.apply(destacar_top3, axis=1), use_container_width=True, hide_index=True)
-        else:
-            st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📝 Colaboradores Registrados - Octavos</h3>", unsafe_allow_html=True)
-            if not df_jugadores.empty:
-                df_registrados = df_jugadores[["Apellido y Nombre", "Legajo"]].copy()
-                df_registrados.columns = ["Colaborador", "Legajo"]
-                df_registrados.insert(0, "Estado", "✅ Guardado")
-                df_registrados.index = range(1, len(df_registrados) + 1)
-                df_registrados.index.name = "N°"
-                st.dataframe(df_registrados.reset_index(), use_container_width=True, hide_index=True)
+        for _, fila in df_jugadores_8.iterrows():
+            leg = str(fila["Legajo"]).strip()
+            puntos_fase = 0
+            
+            # Si hay resultados cargados en 8vos, calcula los puntos correspondientes
+            if res_oficial_8_existe:
+                for col in df_8.columns[3:]:
+                    if col in res_8 and fila[col] == res_8[col] and fila[col] != "":
+                        puntos_fase += 3
+            
+            # Suma al acumulado o crea el registro si es un participante nuevo
+            if leg in dict_acumulado:
+                dict_acumulado[leg]["Puntos"] += puntos_fase
             else:
-                st.info("💡 Aún no se registraron jugadas.")
+                dict_acumulado[leg] = {"Nombre": fila["Apellido y Nombre"], "Puntos": puntos_fase}
+except:
+    df_8 = pd.DataFrame()
 
-# --- 3. HISTORIAL TOP 10 (Pestaña Grupos - Índice 0) ---
+# --- 2. PESTAÑA DE RANKING ACUMULADO ---
+with tab_ranking:
+    if dict_acumulado:
+        # Transformar el diccionario consolidado a un DataFrame para mostrar en pantalla
+        lista_ranking = [{"Colaborador": v["Nombre"], "Legajo": k, "Puntos Totales": v["Puntos"]} for k, v in dict_acumulado.items()]
+        df_rank_total = pd.DataFrame(lista_ranking).sort_values(by="Puntos Totales", ascending=False)
+        df_rank_total.index = range(1, len(df_rank_total) + 1)
+        df_rank_total.index.name = "Puesto"
+        df_rank_total = df_rank_total.reset_index()
+
+        st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>🏆 Tabla de Posiciones Acumulada (Fase Eliminatoria)</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Suma total acumulada de los puntos obtenidos en las fases de 16avos y Octavos de Final.</p>", unsafe_allow_html=True)
+        
+        def destacar_top3(row):
+            if row['Puesto'] <= 3:
+                return ['background-color: #D0E1F9; color: #1E3A8A; font-weight: bold;'] * len(row)
+            return [''] * len(row)
+        
+        st.dataframe(df_rank_total.style.apply(destacar_top3, axis=1), use_container_width=True, hide_index=True)
+    else:
+        st.info("💡 Aún no se registraron jugadas en esta etapa acumulativa.")
+
+# --- 3. HISTORIAL TOP 10 (Fase de grupos original - Índice 0) ---
 with tab_antiguos:
     st.markdown("<h3 style='color: #1E3A8A; text-align: center;'>📊 Top 10 Definitivo - Fase de Grupos</h3>", unsafe_allow_html=True)
     try:
         hoja_vieja = conectar_sheet(0)
-        datos_viejos = hoja_vieja.get_all_records()
-        df_viejo = pd.DataFrame(datos_viejos)
-        
+        df_viejo = pd.DataFrame(hoja_vieja.get_all_records())
         if not df_viejo.empty:
             df_viejo.columns = df_viejo.columns.str.strip()
             mascara_oficial_viejos = df_viejo['Apellido y Nombre'].str.contains("RESULTADOS OFICIALES", na=False)
@@ -255,23 +277,22 @@ with tab_antiguos:
                     df_rank_viejo = pd.DataFrame(ranking_viejo).sort_values(by="Puntos", ascending=False)
                     df_rank_viejo.index = range(1, len(df_rank_viejo) + 1)
                     df_rank_viejo.index.name = "Puesto"
-                    df_top10 = df_rank_viejo.head(10).reset_index()
-                    st.dataframe(df_top10, use_container_width=True, hide_index=True)
+                    st.dataframe(df_rank_viejo.head(10).reset_index(), use_container_width=True, hide_index=True)
     except Exception as e:
         st.error(f"No se pudo cargar el historial: {e}")
 
 # --- 4. TENDENCIAS ---
 with tab_stats:
-    if not df_prode.empty:
-        df_solo_votos = df_prode[~df_prode['Apellido y Nombre'].str.contains("RESULTADOS", na=False)]
-        if not df_solo_votos.empty and len(df_prode.columns) > 3:
+    if not df_8.empty:
+        df_solo_votos_8 = df_8[~df_8['Apellido y Nombre'].str.contains("RESULTADOS", na=False)]
+        if not df_solo_votos_8.empty and len(df_8.columns) > 3:
             st.subheader("¿Cómo están distribuidas las apuestas en Octavos?")
-            todos_votos = df_solo_votos.melt(id_vars=['Apellido y Nombre'], value_vars=df_prode.columns[3:])
+            todos_votos = df_solo_votos_8.melt(id_vars=['Apellido y Nombre'], value_vars=df_8.columns[3:])
             votos_ganadores = todos_votos[~todos_votos['value'].str.contains("Empate")].copy()
             if not votos_ganadores.empty:
                 votos_ganadores['Equipo'] = votos_ganadores['value'].str.split(" Gana ").str[-1]
                 favs = votos_ganadores['Equipo'].value_counts().head(10).reset_index()
-                fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top Favoritos", color_discrete_sequence=['#1E3A8A'])
+                fig = px.bar(favs, x='count', y='Equipo', orientation='h', title="Top Favoritos de la Fase", color_discrete_sequence=['#1E3A8A'])
                 st.plotly_chart(fig, use_container_width=True)
 
 # --- 5. REGLAMENTO ---
