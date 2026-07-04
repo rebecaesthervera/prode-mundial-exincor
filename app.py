@@ -74,14 +74,18 @@ def conectar_sheet(num_pestana):
         return None
 
 # =========================================================
-# ⚽ 2. CONFIGURACIÓN EXCLUSIVA DE LOS 4 PARTIDOS DEFINIDOS
+# ⚽ 2. CRONOGRAMA COMPLETO DE OCTAVOS DE FINAL
 # =========================================================
-# Ajustado exactamente a las columnas D, E, F y G de tu pestaña "8vos"
+# Los 8 partidos distribuidos de corrido desde la columna D hasta la K
 partidos_8vos = [
-    {"id": "P1", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Columna D
-    {"id": "P2", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},       # Columna E
-    {"id": "P3", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},         # Columna F
-    {"id": "P4", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},  # Columna G
+    {"id": "P1", "loc": "Canadá", "sigla_l": "CAN", "vis": "Marruecos", "sigla_v": "MAR"},          # Sábado 4/7  (Columna D)
+    {"id": "P2", "loc": "Paraguay", "sigla_l": "PAR", "vis": "Francia", "sigla_v": "FRA"},         # Sábado 4/7  (Columna E)
+    {"id": "P3", "loc": "Brasil", "sigla_l": "BRA", "vis": "Noruega", "sigla_v": "NOR"},           # Domingo 5/7 (Columna F)
+    {"id": "P4", "loc": "México", "sigla_l": "MEX", "vis": "Inglaterra", "sigla_v": "ENG"},        # Domingo 5/7 (Columna G)
+    {"id": "P5", "loc": "Portugal", "sigla_l": "POR", "vis": "España", "sigla_v": "ESP"},          # Lunes 6/7   (Columna H)
+    {"id": "P6", "loc": "Estados Unidos", "sigla_l": "USA", "vis": "Bélgica", "sigla_v": "BEL"},   # Lunes 6/7   (Columna I)
+    {"id": "P7", "loc": "Argentina", "sigla_l": "ARG", "vis": "Egipto", "sigla_v": "EGY"},         # Martes 7/7  (Columna J)
+    {"id": "P8", "loc": "Suiza", "sigla_l": "SUI", "vis": "Colombia", "sigla_v": "COL"},           # Martes 7/7  (Columna K)
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
@@ -107,7 +111,7 @@ with tab_voto:
         
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de Octavos</h3></div>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los partidos definidos para esta fase.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los 8 partidos correspondientes a los Octavos de Final.</p>", unsafe_allow_html=True)
         
         if "votos_8vos" not in st.session_state:
             st.session_state.votos_8vos = {}
