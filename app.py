@@ -13,7 +13,7 @@ PRONOSTICOS_BLOQUEADOS = False
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
-    page_title="Prode Exincor 2026 - Octavos de Final",
+    page_title="Prode Exincor 2026 - Cuartos de Final",
     page_icon="🏆",
     layout="wide",
 )
@@ -83,70 +83,42 @@ def conectar_sheet(num_pestana):
 
 
 # =========================================================
-# ⚽ 2. CRONOGRAMA COMPLETO DE OCTAVOS DE FINAL
+# ⚽ 2. CRONOGRAMA COMPLETO DE CUARTOS DE FINAL
 # =========================================================
-partidos_8vos = [
+partidos_4tos = [
     {
         "id": "P1",
-        "loc": "Canadá",
-        "sigla_l": "CAN",
+        "loc": "Francia",
+        "sigla_l": "FRA",
         "vis": "Marruecos",
         "sigla_v": "MAR",
     },
     {
         "id": "P2",
-        "loc": "Paraguay",
-        "sigla_l": "PAR",
-        "vis": "Francia",
-        "sigla_v": "FRA",
-    },
-    {
-        "id": "P3",
-        "loc": "Brasil",
-        "sigla_l": "BRA",
-        "vis": "Noruega",
-        "sigla_v": "NOR",
-    },
-    {
-        "id": "P4",
-        "loc": "México",
-        "sigla_l": "MEX",
-        "vis": "Inglaterra",
-        "sigla_v": "ENG",
-    },
-    {
-        "id": "P5",
-        "loc": "Portugal",
-        "sigla_l": "POR",
-        "vis": "España",
-        "sigla_v": "ESP",
-    },
-    {
-        "id": "P6",
-        "loc": "Estados Unidos",
-        "sigla_l": "USA",
+        "loc": "España",
+        "sigla_l": "ESP",
         "vis": "Bélgica",
         "sigla_v": "BEL",
     },
     {
-        "id": "P7",
-        "loc": "Argentina",
-        "sigla_l": "ARG",
-        "vis": "Egipto",
-        "sigla_v": "EGY",
+        "id": "P3",
+        "loc": "Noruega",
+        "sigla_l": "NOR",
+        "vis": "Inglaterra",
+        "sigla_v": "ENG",
     },
     {
-        "id": "P8",
-        "loc": "Suiza",
-        "sigla_l": "SUI",
-        "vis": "Colombia",
-        "sigla_v": "COL",
+        "id": "P4",
+        "loc": "Argentina",
+        "sigla_l": "ARG",
+        "vis": "Suiza",
+        "sigla_v": "SUI",
     },
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
 tab_voto, tab_ranking, tab_antiguos, tab_stats, tab_politicas = st.tabs([
-    "⚽ Cargar Pronósticos (Octavos)",
+    "⚽ Cargar Pronósticos (Cuartos)",
     "📊 Tabla de Posiciones Acumulada",
     "🏅 Top 10 Primera Ronda",
     "📈 Tendencias",
@@ -180,21 +152,21 @@ with tab_voto:
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown(
-            "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de Octavos</h3></div>",
+            "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de Cuartos</h3></div>",
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los 8 partidos correspondientes a los Octavos de Final.</p>",
+            "<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los 4 partidos correspondientes a los Cuartos de Final.</p>",
             unsafe_allow_html=True,
         )
 
-        if "votos_8vos" not in st.session_state:
-            st.session_state.votos_8vos = {}
+        if "votos_4tos" not in st.session_state:
+            st.session_state.votos_4tos = {}
 
-        for idx, partido in enumerate(partidos_8vos):
+        for idx, partido in enumerate(partidos_4tos):
             loc, vis = partido["loc"], partido["vis"]
             s_L, s_V = partido["sigla_l"], partido["sigla_v"]
-            clave = f"8vos_{partido['id']}"
+            clave = f"4tos_{partido['id']}"
 
             with st.container(border=True):
                 st.markdown(
@@ -209,8 +181,8 @@ with tab_voto:
                 ]
 
                 default_idx = (
-                    opciones.index(st.session_state.votos_8vos[clave])
-                    if clave in st.session_state.votos_8vos
+                    opciones.index(st.session_state.votos_4tos[clave])
+                    if clave in st.session_state.votos_4tos
                     else 0
                 )
 
@@ -223,13 +195,13 @@ with tab_voto:
                     key=f"radio_{clave}",
                     disabled=PRONOSTICOS_BLOQUEADOS,
                 )
-                st.session_state.votos_8vos[clave] = seleccion
+                st.session_state.votos_4tos[clave] = seleccion
 
         st.markdown("---")
 
         if not PRONOSTICOS_BLOQUEADOS:
             enviado = st.button(
-                "🚀 ENVIAR PRONÓSTICOS DE OCTAVOS",
+                "🚀 ENVIAR PRONÓSTICOS DE CUARTOS",
                 use_container_width=True,
                 type="primary",
             )
@@ -241,10 +213,10 @@ with tab_voto:
                     )
                 else:
                     incompletos = False
-                    for partido in partidos_8vos:
+                    for partido in partidos_4tos:
                         if (
-                            st.session_state.votos_8vos.get(
-                                f"8vos_{partido['id']}", "Sin seleccionar"
+                            st.session_state.votos_4tos.get(
+                                f"4tos_{partido['id']}", "Sin seleccionar"
                             )
                             == "Sin seleccionar"
                         ):
@@ -253,13 +225,13 @@ with tab_voto:
 
                     if incompletos:
                         st.error(
-                            "⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una option seleccionada."
+                            "⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada."
                         )
                     else:
                         with st.spinner(
-                            "Guardando en la pestaña 8vos de Exincor..."
+                            "Guardando en la pestaña 4tos de Exincor..."
                         ):
-                            hoja = conectar_sheet(2)
+                            hoja = conectar_sheet(3)  # Índice 3 para la pestaña '4tos'
                             if hoja:
                                 nueva_fila = [
                                     datetime.now().strftime(
@@ -269,10 +241,10 @@ with tab_voto:
                                     legajo.strip(),
                                 ]
 
-                                for partido in partidos_8vos:
+                                for partido in partidos_4tos:
                                     nueva_fila.append(
-                                        st.session_state.votos_8vos[
-                                            f"8vos_{partido['id']}"
+                                        st.session_state.votos_4tos[
+                                            f"4tos_{partido['id']}"
                                         ]
                                     )
 
@@ -280,13 +252,15 @@ with tab_voto:
                                     hoja.append_row(nueva_fila)
                                     st.balloons()
                                     st.success(
-                                        "✅ ¡Tus pronósticos de octavos fueron guardados con éxito!"
+                                        "✅ ¡Tus pronósticos de cuartos fueron guardados con éxito!"
                                     )
-                                    st.session_state.votos_8vos = {}
+                                    st.session_state.votos_4tos = {}
                                 except Exception as e:
                                     st.error(
                                         f"Error al escribir en la planilla: {e}"
                                     )
+                            else:
+                                st.error("No se pudo conectar a la pestaña '4tos'. Verificá que exista en tu archivo de Google Sheets.")
         else:
             st.info(
                 "🔒 El envío de formularios está deshabilitado temporalmente."
@@ -309,13 +283,11 @@ try:
         if mascara_oficial_16.any():
             res_16 = df_16[mascara_oficial_16].iloc[0]
             for _, fila in df_jugadores_16.iterrows():
-                # Forzar el legajo numérico como string limpio e ignorar nulos
                 leg = str(fila["Legajo"]).strip().split(".")[0]
                 if not leg or leg == "nan" or leg == "0":
                     continue
 
                 puntos = 0
-                # Se analizan todas las columnas de partidos
                 for col in df_16.columns[3:]:
                     if (
                         col in res_16
@@ -361,10 +333,8 @@ try:
                     ):
                         puntos_fase += 3
 
-            # Consolidación estricta por Legajo
             if leg in dict_acumulado:
                 dict_acumulado[leg]["Puntos"] += puntos_fase
-                # Mantiene el nombre más reciente de la última pestaña
                 dict_acumulado[leg]["Nombre"] = fila[
                     "Apellido y Nombre"
                 ].strip()
@@ -375,6 +345,49 @@ try:
                 }
 except:
     df_8 = pd.DataFrame()
+
+# 3. Opcional: Extraer datos y calcular puntos de 4tos (Pestaña Índice 3) cuando haya RESULTADOS OFICIALES
+try:
+    hoja_4 = conectar_sheet(3)
+    df_4 = pd.DataFrame(hoja_4.get_all_records())
+    if not df_4.empty:
+        df_4.columns = df_4.columns.str.strip()
+        mascara_oficial_4 = df_4['Apellido y Nombre'].str.contains(
+            "RESULTADOS OFICIALES", na=False
+        )
+        df_jugadores_4 = df_4[~mascara_oficial_4]
+
+        res_oficial_4_existe = mascara_oficial_4.any()
+        if res_oficial_4_existe:
+            res_4 = df_4[mascara_oficial_4].iloc[0]
+
+        for _, fila in df_jugadores_4.iterrows():
+            leg = str(fila["Legajo"]).strip().split(".")[0]
+            if not leg or leg == "nan" or leg == "0":
+                continue
+
+            puntos_fase = 0
+            if res_oficial_4_existe:
+                for col in df_4.columns[3:]:
+                    if (
+                        col in res_4
+                        and fila[col] == res_4[col]
+                        and fila[col] != ""
+                    ):
+                        puntos_fase += 3
+
+            if leg in dict_acumulado:
+                dict_acumulado[leg]["Puntos"] += puntos_fase
+                dict_acumulado[leg]["Nombre"] = fila[
+                    "Apellido y Nombre"
+                ].strip()
+            else:
+                dict_acumulado[leg] = {
+                    "Nombre": fila["Apellido y Nombre"].strip(),
+                    "Puntos": puntos_fase,
+                }
+except:
+    pass
 
 # --- 2. PESTAÑA DE RANKING ACUMULADO ---
 with tab_ranking:
@@ -399,7 +412,7 @@ with tab_ranking:
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Suma total acumulada de los puntos obtenidos en las fases de 16avos y Octavos de Final.</p>",
+            "<p style='color: #64748B; text-align: center; font-size: 14px; margin-bottom: 25px;'>Suma total acumulada de los puntos obtenidos en las fases eliminatorias.</p>",
             unsafe_allow_html=True,
         )
 
@@ -414,7 +427,7 @@ with tab_ranking:
             df_rank_total.style.apply(destacar_top3, axis=1),
             use_container_width=True,
             hide_index=True,
-        )
+            )
     else:
         st.info("💡 Aún no se registraron jugadas en esta etapa acumulativa.")
 
@@ -471,34 +484,42 @@ with tab_antiguos:
 
 # --- 4. TENDENCIAS ---
 with tab_stats:
-    if not df_8.empty:
-        df_solo_votos_8 = df_8[
-            ~df_8['Apellido y Nombre'].str.contains("RESULTADOS", na=False)
-        ]
-        if not df_solo_votos_8.empty and len(df_8.columns) > 3:
-            st.subheader("¿Cómo están distribuidas las apuestas en Octavos?")
-            todos_votos = df_solo_votos_8.melt(
-                id_vars=["Apellido y Nombre"], value_vars=df_8.columns[3:]
-            )
-            votos_ganadores = todos_votos[
-                ~todos_votos["value"].str.contains("Empate")
-            ].copy()
-            if not votos_ganadores.empty:
-                votos_ganadores["Equipo"] = (
-                    votos_ganadores["value"].str.split(" Gana ").str[-1]
+    # Muestra tendencias basados en la pestaña actual de Cuartos (Índice 3) si tiene datos
+    try:
+        hoja_4_stats = conectar_sheet(3)
+        df_4_stats = pd.DataFrame(hoja_4_stats.get_all_records())
+        if not df_4_stats.empty and len(df_4_stats.columns) > 3:
+            df_solo_votos_4 = df_4_stats[
+                ~df_4_stats['Apellido y Nombre'].str.contains("RESULTADOS", na=False)
+            ]
+            if not df_solo_votos_4.empty:
+                st.subheader("¿Cómo están distribuidas las apuestas en Cuartos?")
+                todos_votos = df_solo_votos_4.melt(
+                    id_vars=["Apellido y Nombre"], value_vars=df_4_stats.columns[3:]
                 )
-                favs = (
-                    votos_ganadores["Equipo"].value_counts().head(10).reset_index()
-                )
-                fig = px.bar(
-                    favs,
-                    x="count",
-                    y="Equipo",
-                    orientation="h",
-                    title="Top Favoritos de la Fase",
-                    color_discrete_sequence=["#1E3A8A"],
-                )
-                st.plotly_chart(fig, use_container_width=True)
+                votos_ganadores = todos_votos[
+                    ~todos_votos["value"].str.contains("Empate")
+                ].copy()
+                if not votos_ganadores.empty:
+                    votos_ganadores["Equipo"] = (
+                        votos_ganadores["value"].str.split(" Gana ").str[-1]
+                    )
+                    favs = (
+                        votos_ganadores["Equipo"].value_counts().head(10).reset_index()
+                    )
+                    fig = px.bar(
+                        favs,
+                        x="count",
+                        y="Equipo",
+                        orientation="h",
+                        title="Top Favoritos de la Fase",
+                        color_discrete_sequence=["#1E3A8A"],
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("💡 Aún no hay suficientes apuestas registradas en Cuartos para mostrar tendencias.")
+    except:
+        pass
 
 # --- 5. REGLAMENTO ---
 with tab_politicas:
