@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 import gspread
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 from google.oauth2.service_account import Credentials
 
@@ -116,13 +115,11 @@ partidos_4tos = [
     },
 ]
 
-# PESTAÑAS PRINCIPALES DEL SISTEMA
-tab_voto, tab_ranking, tab_antiguos, tab_stats, tab_politicas = st.tabs([
+# PESTAÑAS PRINCIPALES DEL SISTEMA (Filtradas a solo 3)
+tab_voto, tab_ranking, tab_antiguos = st.tabs([
     "⚽ Cargar Pronósticos (Cuartos)",
     "📊 Tabla de Posiciones Acumulada",
     "🏅 Top 10 Primera Ronda",
-    "📈 Tendencias",
-    "📋 Reglamento y Cuadro de Honor",
 ])
 
 # --- 1. PESTAÑA DE CARGA ---
@@ -344,9 +341,9 @@ try:
                     "Puntos": puntos_fase,
                 }
 except:
-    df_8 = pd.DataFrame()
+    pass
 
-# 3. Opcional: Extraer datos y calcular puntos de 4tos (Pestaña Índice 3) cuando haya RESULTADOS OFICIALES
+# 3. Extraer datos y calcular puntos de 4tos (Pestaña Índice 3)
 try:
     hoja_4 = conectar_sheet(3)
     df_4 = pd.DataFrame(hoja_4.get_all_records())
@@ -427,7 +424,7 @@ with tab_ranking:
             df_rank_total.style.apply(destacar_top3, axis=1),
             use_container_width=True,
             hide_index=True,
-            )
+        )
     else:
         st.info("💡 Aún no se registraron jugadas en esta etapa acumulativa.")
 
@@ -481,74 +478,3 @@ with tab_antiguos:
                     )
     except Exception as e:
         st.error(f"No se pudo cargar el historial: {e}")
-
-# --- 4. TENDENCIAS ---
-with tab_stats:
-    # Muestra tendencias basados en la pestaña actual de Cuartos (Índice 3) si tiene datos
-    try:
-        hoja_4_stats = conectar_sheet(3)
-        df_4_stats = pd.DataFrame(hoja_4_stats.get_all_records())
-        if not df_4_stats.empty and len(df_4_stats.columns) > 3:
-            df_solo_votos_4 = df_4_stats[
-                ~df_4_stats['Apellido y Nombre'].str.contains("RESULTADOS", na=False)
-            ]
-            if not df_solo_votos_4.empty:
-                st.subheader("¿Cómo están distribuidas las apuestas en Cuartos?")
-                todos_votos = df_solo_votos_4.melt(
-                    id_vars=["Apellido y Nombre"], value_vars=df_4_stats.columns[3:]
-                )
-                votos_ganadores = todos_votos[
-                    ~todos_votos["value"].str.contains("Empate")
-                ].copy()
-                if not votos_ganadores.empty:
-                    votos_ganadores["Equipo"] = (
-                        votos_ganadores["value"].str.split(" Gana ").str[-1]
-                    )
-                    favs = (
-                        votos_ganadores["Equipo"].value_counts().head(10).reset_index()
-                    )
-                    fig = px.bar(
-                        favs,
-                        x="count",
-                        y="Equipo",
-                        orientation="h",
-                        title="Top Favoritos de la Fase",
-                        color_discrete_sequence=["#1E3A8A"],
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("💡 Aún no hay suficientes apuestas registradas en Cuartos para mostrar tendencias.")
-    except:
-        pass
-
-# --- 5. REGLAMENTO ---
-with tab_politicas:
-    st.markdown(
-        """
-    <div style='background-color: #1E3A8A; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 25px;'>
-        <h2 style='color: white; margin: 0;'>🎖️ CUADRO DE HONOR - GANADORES FASE DE GRUPOS 🎖️</h2>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-    col_ganadores = pd.DataFrame([
-        {
-            "Puesto": "🥇 1° Lugar",
-            "Ganador": "Goyochea Axel Samuel",
-            "Legajo": "637",
-            "Puntos": "141 pts",
-        },
-        {
-            "Puesto": "🥈 2° Lugar",
-            "Ganador": "Guerrero Lautaro",
-            "Legajo": "664",
-            "Puntos": "138 pts",
-        },
-        {
-            "Puesto": "🥉 3° Lugar",
-            "Ganador": "Agustín rojas",
-            "Legajo": "600",
-            "Puntos": "138 pts",
-        },
-    ])
-    st.table(col_ganadores)
