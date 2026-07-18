@@ -8,14 +8,7 @@ from google.oauth2.service_account import Credentials
 # =========================================================
 # ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
 # =========================================================
-# Definimos la fecha límite de cierre (Sábado 18 de Julio a las 18:00 hs)
-FECHA_CIERRE = datetime(2026, 7, 18, 18, 0, 0)
-
-# El sistema evalúa automáticamente si la hora actual superó el límite
-if datetime.now() >= FECHA_CIERRE:
-    PRONOSTICOS_BLOQUEADOS = True
-else:
-    PRONOSTICOS_BLOQUEADOS = False
+PRONOSTICOS_BLOQUEADOS = False
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
@@ -104,9 +97,9 @@ partidos_finales = [
     {
         "id": "final",
         "tipo": "👑 Gran Final",
-        "loc": "Argentina",
+        "loc": "España",
         "sigla_l": "ESP",
-        "vis": "España",
+        "vis": "Argentina",
         "sigla_v": "ARG",
         "detalles": "Dom 19, Jul - 16:00 hs | New York New Jersey Stadium"
     },
