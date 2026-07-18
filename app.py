@@ -8,7 +8,8 @@ from google.oauth2.service_account import Credentials
 # =========================================================
 # ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
 # =========================================================
-PRONOSTICOS_BLOQUEADOS = False
+# CAMBIADO A TRUE: El partido ya comenzó, la carga queda deshabilitada por completo.
+PRONOSTICOS_BLOQUEADOS = True
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
@@ -117,145 +118,141 @@ with tab_voto:
     espacio_izq, col_central, espacio_der = st.columns([1, 2.8, 1])
     with col_central:
         if PRONOSTICOS_BLOQUEADOS:
-            st.warning("⚠️ **La carga de pronósticos se encuentra CERRADA.**")
-
-        st.markdown(
-            "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 15px;'><h3 style='color: white; margin: 0; font-size: 18px;'>👤 1. Tus Datos Personales</h3></div>",
-            unsafe_allow_html=True,
-        )
-        c1, c2 = st.columns(2)
-        with c1:
-            nombre = st.text_input(
-                "Apellido y Nombre",
-                placeholder="Ej: Perez, Juan",
-                disabled=PRONOSTICOS_BLOQUEADOS,
+            st.error("🚫 **¡LAS APUESTAS ESTÁN CERRADAS!**")
+            st.info("El partido ya comenzó y el tiempo límite de carga ha expirado.")
+        else:
+            st.markdown(
+                "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 15px;'><h3 style='color: white; margin: 0; font-size: 18px;'>👤 1. Tus Datos Personales</h3></div>",
+                unsafe_allow_html=True,
             )
-        with c2:
-            legajo = st.text_input(
-                "Legajo",
-                placeholder="Tu número de legajo",
-                disabled=PRONOSTICOS_BLOQUEADOS,
-            )
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown(
-            "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de la Etapa Final</h3></div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            "<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los últimos 2 partidos correspondientes al podio del torneo.</p>",
-            unsafe_allow_html=True,
-        )
-
-        if "votos_finales" not in st.session_state:
-            st.session_state.votos_finales = {}
-
-        for idx, partido in enumerate(partidos_finales):
-            loc, vis = partido["loc"], partido["vis"]
-            s_L, s_V = partido["sigla_l"], partido["sigla_v"]
-            detalles = partido["detalles"]
-            tipo_partido = partido["tipo"]
-            clave = f"finales_{partido['id']}"
-
-            with st.container(border=True):
-                st.markdown(
-                    f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>{tipo_partido}: {loc} vs. {vis}</p>"
-                    f"<p style='margin:0; color:#64748B; font-size: 12px; font-style: italic;'>{detalles}</p>",
-                    unsafe_allow_html=True,
-                )
-                opciones = [
-                    "Sin seleccionar",
-                    f"[{s_L}] Gana {loc}",
-                    "🤝 Empate (90 min + Alargue)",
-                    f"[{s_V}] Gana {vis}",
-                ]
-
-                default_idx = (
-                    opciones.index(st.session_state.votos_finales[clave])
-                    if clave in st.session_state.votos_finales
-                    else 0
-                )
-
-                seleccion = st.radio(
-                    label=f"Opciones_{clave}",
-                    options=opciones,
-                    index=default_idx,
-                    horizontal=True,
-                    label_visibility="collapsed",
-                    key=f"radio_{clave}",
+            c1, c2 = st.columns(2)
+            with c1:
+                nombre = st.text_input(
+                    "Apellido y Name",
+                    placeholder="Ej: Perez, Juan",
                     disabled=PRONOSTICOS_BLOQUEADOS,
                 )
-                st.session_state.votos_finales[clave] = seleccion
+            with c2:
+                legajo = st.text_input(
+                    "Legajo",
+                    placeholder="Tu número de legajo",
+                    disabled=PRONOSTICOS_BLOQUEADOS,
+                )
 
-        st.markdown("---")
-
-        if not PRONOSTICOS_BLOQUEADOS:
-            enviado = st.button(
-                "🚀 ENVIAR PRONÓSTICOS FINALES",
-                use_container_width=True,
-                type="primary",
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(
+                "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de la Etapa Final</h3></div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                "<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los últimos 2 partidos correspondientes al podio del torneo.</p>",
+                unsafe_allow_html=True,
             )
 
-            if enviado:
-                if nombre.strip() == "" or legajo.strip() == "":
-                    st.error(
-                        "🚫 Error: Por favor, ingresá tu Nombre y tu Legajo."
-                    )
-                else:
-                    incompletos = False
-                    for partido in partidos_finales:
-                        if (
-                            st.session_state.votos_finales.get(
-                                f"finales_{partido['id']}", "Sin seleccionar"
-                            )
-                            == "Sin seleccionar"
-                        ):
-                            incompletos = True
-                            break
+            if "votos_finales" not in st.session_state:
+                st.session_state.votos_finales = {}
 
-                    if incompletos:
+            for idx, partido in enumerate(partidos_finales):
+                loc, vis = partido["loc"], partido["vis"]
+                s_L, s_V = partido["sigla_l"], partido["sigla_v"]
+                detalles = partido["detalles"]
+                tipo_partido = partido["tipo"]
+                clave = f"finales_{partido['id']}"
+
+                with st.container(border=True):
+                    st.markdown(
+                        f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>{tipo_partido}: {loc} vs. {vis}</p>"
+                        f"<p style='margin:0; color:#64748B; font-size: 12px; font-style: italic;'>{detalles}</p>",
+                        unsafe_allow_html=True,
+                    )
+                    opciones = [
+                        "Sin seleccionar",
+                        f"[{s_L}] Gana {loc}",
+                        "🤝 Empate (90 min + Alargue)",
+                        f"[{s_V}] Gana {vis}",
+                    ]
+
+                    default_idx = (
+                        opciones.index(st.session_state.votos_finales[clave])
+                        if clave in st.session_state.votos_finales
+                        else 0
+                    )
+
+                    seleccion = st.radio(
+                        label=f"Opciones_{clave}",
+                        options=opciones,
+                        index=default_idx,
+                        horizontal=True,
+                        label_visibility="collapsed",
+                        key=f"radio_{clave}",
+                        disabled=PRONOSTICOS_BLOQUEADOS,
+                    )
+                    st.session_state.votos_finales[clave] = seleccion
+
+            st.markdown("---")
+
+            if not PRONOSTICOS_BLOQUEADOS:
+                enviado = st.button(
+                    "🚀 ENVIAR PRONÓSTICOS FINALES",
+                    use_container_width=True,
+                    type="primary",
+                )
+
+                if enviado:
+                    if nombre.strip() == "" or legajo.strip() == "":
                         st.error(
-                            "⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada."
+                            "🚫 Error: Por favor, ingresá tu Nombre y tu Legajo."
                         )
                     else:
-                        with st.spinner(
-                            "Guardando en la pestaña de Finales..."
-                        ):
-                            # MODIFICADO: Ahora apunta al índice 5 ('FINALES')
-                            hoja = conectar_sheet(5)  
-                            if hoja:
-                                nueva_fila = [
-                                    datetime.now().strftime(
-                                        "%d/%m/%Y %H:%M:%S"
-                                    ),
-                                    nombre.strip(),
-                                    legajo.strip(),
-                                ]
+                        incompletos = False
+                        for partido in partidos_finales:
+                            if (
+                                st.session_state.votos_finales.get(
+                                    f"finales_{partido['id']}", "Sin seleccionar"
+                                )
+                                == "Sin seleccionar"
+                            ):
+                                incompletos = True
+                                break
 
-                                for partido in partidos_finales:
-                                    nueva_fila.append(
-                                        st.session_state.votos_finales[
-                                            f"finales_{partido['id']}"
-                                        ]
-                                    )
+                        if incompletos:
+                            st.error(
+                                "⚠️ ¡Faltan completar partidos! Revisá que todos los cruces tengan una opción seleccionada."
+                            )
+                        else:
+                            with st.spinner(
+                                "Guardando en la pestaña de Finales..."
+                            ):
+                                hoja = conectar_sheet(5)  
+                                if hoja:
+                                    nueva_fila = [
+                                        datetime.now().strftime(
+                                            "%d/%m/%Y %H:%M:%S"
+                                        ),
+                                        nombre.strip(),
+                                        legajo.strip(),
+                                    ]
 
-                                try:
-                                    hoja.append_row(nueva_fila)
-                                    st.balloons()
-                                    st.success(
-                                        "✅ ¡Tus pronósticos finales fueron guardados con éxito!"
-                                    )
-                                    st.session_state.votos_finales = {}
-                                except Exception as e:
-                                    st.error(
-                                        f"Error al escribir en la planilla: {e}"
-                                    )
-                            else:
-                                st.error("No se pudo conectar a la pestaña 'FINALES'. Verificá que el orden de las pestañas sea correcto.")
-        else:
-            st.info(
-                "🔒 El envío de formularios está deshabilitado temporalmente."
-            )
+                                    for partido in partidos_finales:
+                                        nueva_fila.append(
+                                            st.session_state.votos_finales[
+                                                f"finales_{partido['id']}"
+                                            ]
+                                        )
+
+                                    try:
+                                        hoja.append_row(nueva_fila)
+                                        st.balloons()
+                                        st.success(
+                                            "✅ ¡Tus pronósticos finales fueron guardados con éxito!"
+                                        )
+                                        st.session_state.votos_finales = {}
+                                    except Exception as e:
+                                        st.error(
+                                            f"Error al escribir en la planilla: {e}"
+                                        )
+                                else:
+                                    st.error("No se pudo conectar a la pestaña 'FINALES'. Verificá que el orden de las pestañas sea correcto.")
 
 # --- PROCESAMIENTO UNIFICADO DE RANKING POR LEGAJO ---
 dict_acumulado = {}
@@ -423,7 +420,7 @@ try:
 except:
     pass
 
-# 5. AGREGADO: Extraer datos y calcular puntos de la pestaña FINALES (Pestaña Índice 5)
+# 5. Extraer datos y calcular puntos de la pestaña FINALES (Pestaña Índice 5)
 try:
     hoja_f = conectar_sheet(5)
     df_f = pd.DataFrame(hoja_f.get_all_records())
