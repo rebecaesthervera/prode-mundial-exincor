@@ -12,7 +12,7 @@ PRONOSTICOS_BLOQUEADOS = False
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
-    page_title="Prode Exincor 2026 - Semifinales",
+    page_title="Prode Exincor 2026 - Finales",
     page_icon="🏆",
     layout="wide",
 )
@@ -82,30 +82,32 @@ def conectar_sheet(num_pestana):
 
 
 # =========================================================
-# ⚽ 2. CRONOGRAMA COMPLETO DE SEMIFINALES
+# ⚽ 2. CRONOGRAMA DE PARTIDOS FINALES (3er Puesto y Final)
 # =========================================================
-partidos_semis = [
+partidos_finales = [
     {
-        "id": "SF1",
+        "id": "3puesto",
+        "tipo": "🥉 Tercer Puesto",
         "loc": "Francia",
         "sigla_l": "FRA",
-        "vis": "España",
-        "sigla_v": "ESP",
-        "detalles": "Mar 14, Jul - 16:00 hs | Dallas Stadium"
+        "vis": "Inglaterra",
+        "sigla_v": "ENG",
+        "detalles": "Sáb 18, Jul - 18:00 hs | Miami Stadium"
     },
     {
-        "id": "SF2",
-        "loc": "Inglaterra",
-        "sigla_l": "ENG",
+        "id": "final",
+        "tipo": "👑 Gran Final",
+        "loc": "España",
+        "sigla_l": "ESP",
         "vis": "Argentina",
         "sigla_v": "ARG",
-        "detalles": "Mié 15, Jul - 16:00 hs | Atlanta Stadium"
+        "detalles": "Dom 19, Jul - 16:00 hs | New York New Jersey Stadium"
     },
 ]
 
 # PESTAÑAS PRINCIPALES DEL SISTEMA
 tab_voto, tab_ranking, tab_antiguos = st.tabs([
-    "⚽ Cargar Pronósticos (Semifinales)",
+    "⚽ Cargar Pronósticos (Finales)",
     "📊 Tabla de Posiciones Acumulada",
     "🏅 Top 10 Primera Ronda",
 ])
@@ -137,26 +139,27 @@ with tab_voto:
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown(
-            "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de Semifinales</h3></div>",
+            "<div style='background-color: #1E3A8A; padding: 10px; border-radius: 5px; margin-bottom: 5px;'><h3 style='color: white; margin: 0; font-size: 18px;'>🔮 2. Pronósticos de la Etapa Final</h3></div>",
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los 2 partidos correspondientes a las Semifinales.</p>",
+            "<p style='color: #64748B; font-size: 14px; margin-bottom: 15px;'>Completá los últimos 2 partidos correspondientes al podio del torneo.</p>",
             unsafe_allow_html=True,
         )
 
-        if "votos_semis" not in st.session_state:
-            st.session_state.votos_semis = {}
+        if "votos_finales" not in st.session_state:
+            st.session_state.votos_finales = {}
 
-        for idx, partido in enumerate(partidos_semis):
+        for idx, partido in enumerate(partidos_finales):
             loc, vis = partido["loc"], partido["vis"]
             s_L, s_V = partido["sigla_l"], partido["sigla_v"]
             detalles = partido["detalles"]
-            clave = f"semis_{partido['id']}"
+            tipo_partido = partido["tipo"]
+            clave = f"finales_{partido['id']}"
 
             with st.container(border=True):
                 st.markdown(
-                    f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>Partido {idx+1}: {loc} vs. {vis}</p>"
+                    f"<p style='margin:0; color:#1E3A8A; font-weight: bold;'>{tipo_partido}: {loc} vs. {vis}</p>"
                     f"<p style='margin:0; color:#64748B; font-size: 12px; font-style: italic;'>{detalles}</p>",
                     unsafe_allow_html=True,
                 )
@@ -168,8 +171,8 @@ with tab_voto:
                 ]
 
                 default_idx = (
-                    opciones.index(st.session_state.votos_semis[clave])
-                    if clave in st.session_state.votos_semis
+                    opciones.index(st.session_state.votos_finales[clave])
+                    if clave in st.session_state.votos_finales
                     else 0
                 )
 
@@ -182,13 +185,13 @@ with tab_voto:
                     key=f"radio_{clave}",
                     disabled=PRONOSTICOS_BLOQUEADOS,
                 )
-                st.session_state.votos_semis[clave] = seleccion
+                st.session_state.votos_finales[clave] = seleccion
 
         st.markdown("---")
 
         if not PRONOSTICOS_BLOQUEADOS:
             enviado = st.button(
-                "🚀 ENVIAR PRONÓSTICOS DE SEMIFINALES",
+                "🚀 ENVIAR PRONÓSTICOS FINALES",
                 use_container_width=True,
                 type="primary",
             )
@@ -200,10 +203,10 @@ with tab_voto:
                     )
                 else:
                     incompletos = False
-                    for partido in partidos_semis:
+                    for partido in partidos_finales:
                         if (
-                            st.session_state.votos_semis.get(
-                                f"semis_{partido['id']}", "Sin seleccionar"
+                            st.session_state.votos_finales.get(
+                                f"finales_{partido['id']}", "Sin seleccionar"
                             )
                             == "Sin seleccionar"
                         ):
@@ -216,9 +219,10 @@ with tab_voto:
                         )
                     else:
                         with st.spinner(
-                            "Guardando en la pestaña semis de Exincor..."
+                            "Guardando en la pestaña de Finales..."
                         ):
-                            hoja = conectar_sheet(4)  # Índice 4 para la pestaña 'semis'
+                            # MODIFICADO: Ahora apunta al índice 5 ('FINALES')
+                            hoja = conectar_sheet(5)  
                             if hoja:
                                 nueva_fila = [
                                     datetime.now().strftime(
@@ -228,10 +232,10 @@ with tab_voto:
                                     legajo.strip(),
                                 ]
 
-                                for partido in partidos_semis:
+                                for partido in partidos_finales:
                                     nueva_fila.append(
-                                        st.session_state.votos_semis[
-                                            f"semis_{partido['id']}"
+                                        st.session_state.votos_finales[
+                                            f"finales_{partido['id']}"
                                         ]
                                     )
 
@@ -239,15 +243,15 @@ with tab_voto:
                                     hoja.append_row(nueva_fila)
                                     st.balloons()
                                     st.success(
-                                        "✅ ¡Tus pronósticos de semifinales fueron guardados con éxito!"
+                                        "✅ ¡Tus pronósticos finales fueron guardados con éxito!"
                                     )
-                                    st.session_state.votos_semis = {}
+                                    st.session_state.votos_finales = {}
                                 except Exception as e:
                                     st.error(
                                         f"Error al escribir en la planilla: {e}"
                                     )
                             else:
-                                st.error("No se pudo conectar a la pestaña 'semis'. Verificá que exista en tu archivo de Google Sheets.")
+                                st.error("No se pudo conectar a la pestaña 'FINALES'. Verificá que el orden de las pestañas sea correcto.")
         else:
             st.info(
                 "🔒 El envío de formularios está deshabilitado temporalmente."
@@ -402,6 +406,49 @@ try:
                     if (
                         col in res_s
                         and fila[col] == res_s[col]
+                        and fila[col] != ""
+                    ):
+                        puntos_fase += 3
+
+            if leg in dict_acumulado:
+                dict_acumulado[leg]["Puntos"] += puntos_fase
+                dict_acumulado[leg]["Nombre"] = fila[
+                    "Apellido y Nombre"
+                ].strip()
+            else:
+                dict_acumulado[leg] = {
+                    "Nombre": fila["Apellido y Nombre"].strip(),
+                    "Puntos": puntos_fase,
+                }
+except:
+    pass
+
+# 5. AGREGADO: Extraer datos y calcular puntos de la pestaña FINALES (Pestaña Índice 5)
+try:
+    hoja_f = conectar_sheet(5)
+    df_f = pd.DataFrame(hoja_f.get_all_records())
+    if not df_f.empty:
+        df_f.columns = df_f.columns.str.strip()
+        mascara_oficial_f = df_f['Apellido y Nombre'].str.contains(
+            "RESULTADOS OFICIALES", na=False
+        )
+        df_jugadores_f = df_f[~mascara_oficial_f]
+
+        res_oficial_f_existe = mascara_oficial_f.any()
+        if res_oficial_f_existe:
+            res_f = df_f[mascara_oficial_f].iloc[0]
+
+        for _, fila in df_jugadores_f.iterrows():
+            leg = str(fila["Legajo"]).strip().split(".")[0]
+            if not leg or leg == "nan" or leg == "0":
+                continue
+
+            puntos_fase = 0
+            if res_oficial_f_existe:
+                for col in df_f.columns[3:]:
+                    if (
+                        col in res_f
+                        and fila[col] == res_f[col]
                         and fila[col] != ""
                     ):
                         puntos_fase += 3
