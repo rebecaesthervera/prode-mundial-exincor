@@ -97,9 +97,9 @@ partidos_finales = [
     {
         "id": "final",
         "tipo": "👑 Gran Final",
-        "loc": "España",
+        "loc": "Argentina",
         "sigla_l": "ESP",
-        "vis": "Argentina",
+        "vis": "España",
         "sigla_v": "ARG",
         "detalles": "Dom 19, Jul - 16:00 hs | New York New Jersey Stadium"
     },
