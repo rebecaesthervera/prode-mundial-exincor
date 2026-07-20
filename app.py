@@ -8,7 +8,7 @@ from google.oauth2.service_account import Credentials
 # =========================================================
 # ⚙️ CONTROL INTERNO DE FECHAS Y PLATAFORMA
 # =========================================================
-# CAMBIADO A TRUE: El partido ya comenzó, la carga queda deshabilitada por completo.
+# TRUE: El partido ya comenzó, la carga queda deshabilitada por completo.
 PRONOSTICOS_BLOQUEADOS = True
 
 # 1. CONFIGURACIÓN DE PÁGINA
@@ -256,212 +256,63 @@ with tab_voto:
 
 # --- PROCESAMIENTO UNIFICADO DE RANKING POR LEGAJO ---
 dict_acumulado = {}
+fases = [
+    {"num": 1, "nombre_fase": "16avos"},
+    {"num": 2, "nombre_fase": "8vos"},
+    {"num": 3, "nombre_fase": "4tos"},
+    {"num": 4, "nombre_fase": "semis"},
+    {"num": 5, "nombre_fase": "FINALES"},
+]
 
-# 1. Extraer datos y calcular puntos de 16avos (Pestaña Índice 1)
-try:
-    hoja_16 = conectar_sheet(1)
-    df_16 = pd.DataFrame(hoja_16.get_all_records())
-    if not df_16.empty:
-        df_16.columns = df_16.columns.str.strip()
-        mascara_oficial_16 = df_16['Apellido y Nombre'].str.contains(
-            "RESULTADOS OFICIALES", na=False
-        )
-        df_jugadores_16 = df_16[~mascara_oficial_16]
+for fase in fases:
+    try:
+        hoja = conectar_sheet(fase["num"])
+        if hoja:
+            # Usamos get_all_values() para evitar fallos por títulos vacíos o duplicados en las hojas
+            datos_crudos = hoja.get_all_values()
+            if len(datos_crudos) > 1:
+                columnas = [c.strip() for c in datos_crudos[0]]
+                df_fase = pd.DataFrame(datos_crudos[1:], columns=columnas)
 
-        if mascara_oficial_16.any():
-            res_16 = df_16[mascara_oficial_16].iloc[0]
-            for _, fila in df_jugadores_16.iterrows():
-                leg = str(fila["Legajo"]).strip().split(".")[0]
-                if not leg or leg == "nan" or leg == "0":
-                    continue
+                # Buscar la fila de resultados oficiales sin importar mayúsculas
+                mascara_oficial = df_fase["Apellido y Nombre"].str.upper().str.contains("RESULTADOS OFICIALES", na=False)
+                df_jugadores = df_fase[~mascara_oficial]
 
-                puntos = 0
-                for col in df_16.columns[3:]:
-                    if (
-                        col in res_16
-                        and fila[col] == res_16[col]
-                        and fila[col] != ""
-                    ):
-                        puntos += 3
+                if mascara_oficial.any():
+                    res_oficial = df_fase[mascara_oficial].iloc[0]
+                    columnas_pred = columnas[3:]
 
-                dict_acumulado[leg] = {
-                    "Nombre": fila["Apellido y Nombre"].strip(),
-                    "Puntos": puntos,
-                }
-except:
-    pass
+                    for _, fila in df_jugadores.iterrows():
+                        # Extraer y limpiar el legajo como identificador clave
+                        leg = str(fila.get("Legajo", "")).strip().split(".")[0]
+                        if not leg or leg == "nan" or leg == "0" or leg == "":
+                            continue
 
-# 2. Extraer datos, calcular puntos de 8vos (Pestaña Índice 2) y consolidar por Legajo
-try:
-    hoja_8 = conectar_sheet(2)
-    df_8 = pd.DataFrame(hoja_8.get_all_records())
-    if not df_8.empty:
-        df_8.columns = df_8.columns.str.strip()
-        mascara_oficial_8 = df_8['Apellido y Nombre'].str.contains(
-            "RESULTADOS OFICIALES", na=False
-        )
-        df_jugadores_8 = df_8[~mascara_oficial_8]
+                        puntos_fase = 0
+                        for col in columnas_pred:
+                            # Ignorar columnas vacías generadas al final de la hoja por celdas fantasmas
+                            if col == "" or "Unnamed" in col or col.startswith("//"):
+                                continue
 
-        res_oficial_8_existe = mascara_oficial_8.any()
-        if res_oficial_8_existe:
-            res_8 = df_8[mascara_oficial_8].iloc[0]
+                            val_oficial = str(res_oficial.get(col, "")).strip().lower()
+                            val_jugador = str(fila.get(col, "")).strip().lower()
 
-        for _, fila in df_jugadores_8.iterrows():
-            leg = str(fila["Legajo"]).strip().split(".")[0]
-            if not leg or leg == "nan" or leg == "0":
-                continue
+                            if val_oficial != "" and val_oficial == val_jugador:
+                                puntos_fase += 3
 
-            puntos_fase = 0
-            if res_oficial_8_existe:
-                for col in df_8.columns[3:]:
-                    if (
-                        col in res_8
-                        and fila[col] == res_8[col]
-                        and fila[col] != ""
-                    ):
-                        puntos_fase += 3
-
-            if leg in dict_acumulado:
-                dict_acumulado[leg]["Puntos"] += puntos_fase
-                dict_acumulado[leg]["Nombre"] = fila[
-                    "Apellido y Nombre"
-                ].strip()
-            else:
-                dict_acumulado[leg] = {
-                    "Nombre": fila["Apellido y Nombre"].strip(),
-                    "Puntos": puntos_fase,
-                }
-except:
-    pass
-
-# 3. Extraer datos y calcular puntos de 4tos (Pestaña Índice 3)
-try:
-    hoja_4 = conectar_sheet(3)
-    df_4 = pd.DataFrame(hoja_4.get_all_records())
-    if not df_4.empty:
-        df_4.columns = df_4.columns.str.strip()
-        mascara_oficial_4 = df_4['Apellido y Nombre'].str.contains(
-            "RESULTADOS OFICIALES", na=False
-        )
-        df_jugadores_4 = df_4[~mascara_oficial_4]
-
-        res_oficial_4_existe = mascara_oficial_4.any()
-        if res_oficial_4_existe:
-            res_4 = df_4[mascara_oficial_4].iloc[0]
-
-        for _, fila in df_jugadores_4.iterrows():
-            leg = str(fila["Legajo"]).strip().split(".")[0]
-            if not leg or leg == "nan" or leg == "0":
-                continue
-
-            puntos_fase = 0
-            if res_oficial_4_existe:
-                for col in df_4.columns[3:]:
-                    if (
-                        col in res_4
-                        and fila[col] == res_4[col]
-                        and fila[col] != ""
-                    ):
-                        puntos_fase += 3
-
-            if leg in dict_acumulado:
-                dict_acumulado[leg]["Puntos"] += puntos_fase
-                dict_acumulado[leg]["Nombre"] = fila[
-                    "Apellido y Nombre"
-                ].strip()
-            else:
-                dict_acumulado[leg] = {
-                    "Nombre": fila["Apellido y Nombre"].strip(),
-                    "Puntos": puntos_fase,
-                }
-except:
-    pass
-
-# 4. Extraer datos y calcular puntos de Semifinales (Pestaña Índice 4)
-try:
-    hoja_s = conectar_sheet(4)
-    df_s = pd.DataFrame(hoja_s.get_all_records())
-    if not df_s.empty:
-        df_s.columns = df_s.columns.str.strip()
-        mascara_oficial_s = df_s['Apellido y Nombre'].str.contains(
-            "RESULTADOS OFICIALES", na=False
-        )
-        df_jugadores_s = df_s[~mascara_oficial_s]
-
-        res_oficial_s_existe = mascara_oficial_s.any()
-        if res_oficial_s_existe:
-            res_s = df_s[mascara_oficial_s].iloc[0]
-
-        for _, fila in df_jugadores_s.iterrows():
-            leg = str(fila["Legajo"]).strip().split(".")[0]
-            if not leg or leg == "nan" or leg == "0":
-                continue
-
-            puntos_fase = 0
-            if res_oficial_s_existe:
-                for col in df_s.columns[3:]:
-                    if (
-                        col in res_s
-                        and fila[col] == res_s[col]
-                        and fila[col] != ""
-                    ):
-                        puntos_fase += 3
-
-            if leg in dict_acumulado:
-                dict_acumulado[leg]["Puntos"] += puntos_fase
-                dict_acumulado[leg]["Nombre"] = fila[
-                    "Apellido y Nombre"
-                ].strip()
-            else:
-                dict_acumulado[leg] = {
-                    "Nombre": fila["Apellido y Nombre"].strip(),
-                    "Puntos": puntos_fase,
-                }
-except:
-    pass
-
-# 5. Extraer datos y calcular puntos de la pestaña FINALES (Pestaña Índice 5)
-try:
-    hoja_f = conectar_sheet(5)
-    df_f = pd.DataFrame(hoja_f.get_all_records())
-    if not df_f.empty:
-        df_f.columns = df_f.columns.str.strip()
-        mascara_oficial_f = df_f['Apellido y Nombre'].str.contains(
-            "RESULTADOS OFICIALES", na=False
-        )
-        df_jugadores_f = df_f[~mascara_oficial_f]
-
-        res_oficial_f_existe = mascara_oficial_f.any()
-        if res_oficial_f_existe:
-            res_f = df_f[mascara_oficial_f].iloc[0]
-
-        for _, fila in df_jugadores_f.iterrows():
-            leg = str(fila["Legajo"]).strip().split(".")[0]
-            if not leg or leg == "nan" or leg == "0":
-                continue
-
-            puntos_fase = 0
-            if res_oficial_f_existe:
-                for col in df_f.columns[3:]:
-                    if (
-                        col in res_f
-                        and fila[col] == res_f[col]
-                        and fila[col] != ""
-                    ):
-                        puntos_fase += 3
-
-            if leg in dict_acumulado:
-                dict_acumulado[leg]["Puntos"] += puntos_fase
-                dict_acumulado[leg]["Nombre"] = fila[
-                    "Apellido y Nombre"
-                ].strip()
-            else:
-                dict_acumulado[leg] = {
-                    "Nombre": fila["Apellido y Nombre"].strip(),
-                    "Puntos": puntos_fase,
-                }
-except:
-    pass
+                        nombre_limpio = fila["Apellido y Nombre"].strip().title()
+                        if leg in dict_acumulado:
+                            dict_acumulado[leg]["Puntos"] += puntos_fase
+                            # Si un nombre viene más completo en otra pestaña, lo actualiza
+                            if len(nombre_limpio) > len(dict_acumulado[leg]["Nombre"]):
+                                dict_acumulado[leg]["Nombre"] = nombre_limpio
+                        else:
+                            dict_acumulado[leg] = {
+                                "Nombre": nombre_limpio,
+                                "Puntos": puntos_fase,
+                            }
+    except Exception as e:
+        pass
 
 
 # --- 2. PESTAÑA DE RANKING ACUMULADO ---
@@ -475,9 +326,12 @@ with tab_ranking:
             }
             for k, v in dict_acumulado.items()
         ]
+        
         df_rank_total = pd.DataFrame(lista_ranking).sort_values(
             by="Puntos Totales", ascending=False
         )
+        
+        # Asignación estética y matemática de los puestos en orden consecutivo
         df_rank_total.index = range(1, len(df_rank_total) + 1)
         df_rank_total.index.name = "Puesto"
         df_rank_total = df_rank_total.reset_index()
